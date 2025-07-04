@@ -181,3 +181,45 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ message: "Failed to reset password", error });
   }
 };
+
+
+// controllers/authController.js
+
+// GET /api/auth/validate
+// Header: Authorization: Bearer <token>
+exports.validateToken = async (req, res) => {
+  try {
+    /* 
+      protect middleware should already:
+      1. Verify the JWT
+      2. Attach the decoded payload to req.user
+    */
+    if (!req.user) {
+      // Either protect() middleware was not applied or token verification failed
+      return res.status(401).json({
+        valid: false,
+        message: 'Invalid or missing token',
+      });
+    }
+
+    // Optionally expose issued‑at / expires‐at if your middleware sets them
+    const response = {
+      valid: true,
+      user: req.user,       // basic profile info (sans password)
+      message: 'Token is valid',
+    };
+
+    // If you stored iat/exp in req after verification, include them
+    if (req.iat) response.issuedAt = req.iat;
+    if (req.exp) response.expiresAt = req.exp;
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error('Token validation error →', error);
+    return res.status(500).json({
+      valid: false,
+      message: 'Token validation failed',
+      error: error?.message || 'Unknown error',
+    });
+  }
+};

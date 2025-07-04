@@ -6,6 +6,10 @@ const verifyToken = require('../middleware/verifyToken')
 // const isAdmin = require('../middleware/isAdmin'); // ✅ Admin check middleware
 const { protect, allowRoles } = require('../middleware/auth.middleware');
 
+
+// GET /api/progress/summary
+router.get('/summary', protect, progressController.getUserCourseProgressSummary);
+
 // Track progress
 router.post('/update', protect, progressController.updateProgress);
 

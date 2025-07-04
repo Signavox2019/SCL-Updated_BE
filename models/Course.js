@@ -38,6 +38,12 @@ const courseSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     slug: { type: String, unique: true, index: true },          // SEO‑friendly URL
     description: String,
+     type: {
+      type: String,
+      enum: ['Technical', 'Soft Skills', 'Management', 'Creative', 'Language', 'Other'],
+      default: 'Technical',
+      index: true,
+    },
     category: { type: String, index: true },                    // e.g. “Web Development”
     subCategory: String,                                        // e.g. “React”
     level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], default: 'Beginner' },
