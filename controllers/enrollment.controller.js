@@ -75,3 +75,61 @@ exports.enrollmentStats = async (req, res) => {
     res.status(500).json({ message: "Error fetching stats", error });
   }
 };
+
+
+
+// GET  /api/enrollments/me
+// List all courses the logged‑in user is enrolled in
+exports.getMyEnrollments = async (req, res) => {
+  try {
+    const userId = req.user.id;            // populated by protect middleware
+
+    const enrollments = await Enrollment.find({ user: userId })
+      .populate('course', 'title coverImage category type level status');
+
+    return res.status(200).json({
+      message: 'Your enrolled courses',
+      data: enrollments,
+    });
+  } catch (err) {
+    console.error('Get my enrollments error →', err);
+    return res.status(500).json({ message: 'Failed to fetch enrollments', error: err });
+  }
+};
+
+// GET  /api/enrollments/me/stats
+// Returns simple counts & revenue for the current user
+exports.getMyEnrollmentStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Total enrollments
+    const myTotal = await Enrollment.countDocuments({ user: userId });
+
+    // Completed vs in‑progress via Progress collection (optional)
+    const completedCount = await Progress.countDocuments({
+      user: userId,
+      isCompleted: true,
+    });
+    const inProgressCount = await Progress.countDocuments({
+      user: userId,
+      isCompleted: false,
+    });
+
+    // Revenue the user has paid (if relevant)
+    const paidAgg = await Enrollment.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(userId), paymentStatus: 'Success' } },
+      { $group: { _id: null, total: { $sum: '$amountPaid' } } },
+    ]);
+
+    return res.status(200).json({
+      enrolled: myTotal,
+      completed: completedCount,
+      inProgress: inProgressCount,
+      amountSpent: paidAgg[0]?.total || 0,
+    });
+  } catch (err) {
+    console.error('My enrollment stats error →', err);
+    return res.status(500).json({ message: 'Failed to fetch stats', error: err });
+  }
+};

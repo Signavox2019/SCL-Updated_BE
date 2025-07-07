@@ -14,4 +14,10 @@ router.get('/user/:userId', protect, allowRoles('admin'), enrollmentController.g
 // Stats
 router.get('/stats/metrics', protect, enrollmentController.enrollmentStats);
 
+
+// 🆕 self‑service routes
+router.get('/me', protect, enrollmentController.getMyEnrollments);
+router.get('/me/stats', protect, enrollmentController.getMyEnrollmentStats);
+
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Progress = require('../models/Progress');
 
 const enrollmentSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
