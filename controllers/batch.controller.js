@@ -133,3 +133,114 @@ exports.sendBatchCertificates = async (req, res) => {
     res.status(500).json({ message: 'Error sending certificates', error });
   }
 };
+
+
+exports.getAvailableUsersForBatch = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    // Step 1: Find the course and its enrolled users
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const enrolledUserIds = course.enrolledUsers;
+
+    // Step 2: Get users already assigned to a batch of this course
+    const batches = await Batch.find({ course: courseId }, 'users');
+    const assignedUserIds = batches.flatMap(batch => batch.users.map(id => id.toString()));
+
+    // Step 3: Filter users who are enrolled but not yet assigned to any batch
+    const unassignedUserIds = enrolledUserIds.filter(
+      userId => !assignedUserIds.includes(userId.toString())
+    );
+
+    // Step 4: Fetch full user details of the unassigned users
+    const unassignedUsers = await User.find({ _id: { $in: unassignedUserIds } }, 'name email');
+
+    res.status(200).json({
+      courseId,
+      courseTitle: course.title,
+      totalEnrolled: enrolledUserIds.length,
+      alreadyAssigned: assignedUserIds.length,
+      availableUsers: unassignedUsers.length,
+      users: unassignedUsers
+    });
+
+  } catch (error) {
+    console.error("Error fetching available users for batch:", error);
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+};
+
+
+exports.getBatchUserBreakdown = async (req, res) => {
+  try {
+    const { courseId, batchId } = req.params;
+
+    // Step 1: Fetch the course
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    const enrolledUserIds = course.enrolledUsers.map(id => id.toString());
+
+    // Step 2: Fetch all batches of this course
+    const allBatches = await Batch.find({ course: courseId });
+
+    const assignedUserMap = new Map(); // userId -> batchId
+    for (const batch of allBatches) {
+      for (const userId of batch.users) {
+        assignedUserMap.set(userId.toString(), batch._id.toString());
+      }
+    }
+
+    // Step 3: Classify users
+    const assignedToThisBatch = [];
+    const assignedToOtherBatches = [];
+    const unassignedUsers = [];
+
+    for (const userId of enrolledUserIds) {
+      const assignedBatchId = assignedUserMap.get(userId);
+
+      if (!assignedBatchId) {
+        unassignedUsers.push(userId);
+      } else if (assignedBatchId === batchId) {
+        assignedToThisBatch.push(userId);
+      } else {
+        assignedToOtherBatches.push(userId);
+      }
+    }
+
+    // Step 4: Fetch full user details
+    const [usersThisBatch, usersOtherBatches, usersAvailable] = await Promise.all([
+      User.find({ _id: { $in: assignedToThisBatch } }, 'name email'),
+      User.find({ _id: { $in: assignedToOtherBatches } }, 'name email'),
+      User.find({ _id: { $in: unassignedUsers } }, 'name email')
+    ]);
+
+    res.status(200).json({
+      courseId,
+      courseTitle: course.title,
+      totalEnrolled: enrolledUserIds.length,
+      batchId,
+      breakdown: {
+        assignedToThisBatch: {
+          count: usersThisBatch.length,
+          users: usersThisBatch
+        },
+        assignedToOtherBatches: {
+          count: usersOtherBatches.length,
+          users: usersOtherBatches
+        },
+        availableUsers: {
+          count: usersAvailable.length,
+          users: usersAvailable
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching batch user breakdown:", error);
+    res.status(500).json({ message: 'Internal server error', error });
+  }
+};

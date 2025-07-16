@@ -4,6 +4,14 @@ const batchController = require('../controllers/batch.controller');
 const { protect, allowRoles } = require('../middleware/auth.middleware');
 
 router.post('/create', protect, allowRoles('admin'), batchController.createBatch);
+
+// GET /api/batches/available-users/:courseId
+router.get('/available-users/:courseId', batchController.getAvailableUsersForBatch);
+
+// GET /api/batches/user-breakdown/:courseId/:batchId
+router.get('/user-breakdown/:courseId/:batchId', batchController.getBatchUserBreakdown);
+
+
 router.get('/', protect, allowRoles('admin'), batchController.getAllBatches);
 router.post('/assign-quiz', protect, allowRoles('admin'), batchController.assignQuizToBatch);
 router.get('/:id', protect, allowRoles('admin'), batchController.getBatch);

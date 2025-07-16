@@ -1,20 +1,31 @@
+// models/Notification.js
 const mongoose = require('mongoose');
 
-const notificationSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+const notificationSchema = new mongoose.Schema(
+  {
+    /* Who receives it */
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-  title: { type: String, required: true },
-  message: { type: String, required: true },
+    /* Who created it (usually an admin) */
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
-  type: {
-    type: String,
-    enum: ['registration', 'course', 'event', 'quiz', 'certificate', 'system'],
-    default: 'system'
+    /* Optional batch context (one notice may belong to several batches) */
+    targetBatches: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Batch' }],
+
+    /* Content */
+    title:   { type: String, required: true },
+    message: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ['registration', 'course', 'event', 'quiz', 'certificate', 'system'],
+      default: 'system',
+    },
+    link: String,
+
+    /* Status */
+    isRead:   { type: Boolean, default: false },
   },
-
-  link: { type: String }, // optional link to page (e.g., /dashboard/courses/123)
-  isRead: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
-});
+  { timestamps: true }                       // createdAt + updatedAt
+);
 
 module.exports = mongoose.model('Notification', notificationSchema);
