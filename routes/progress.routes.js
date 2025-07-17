@@ -19,6 +19,8 @@ router.post('/complete', protect, progressController.completeCourse);
 // Bulk completion
 router.post('/complete/bulk', protect, allowRoles('admin'), progressController.completeCoursesBulk);
 
+// Complete course by batch
+router.post('/completeByBatch', protect, allowRoles('admin'), progressController.completeCoursesByBatch);
 
 // Admin-only route to get all user progress
 router.get('/admin/all', protect, allowRoles('admin'), progressController.getAllUserProgress);

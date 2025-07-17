@@ -5,15 +5,14 @@ exports.createCourse = async (req, res) => {
   try {
     const { professor, ...courseData } = req.body;
 
-    // Check if professor is already engaged in any course
-    const prof = await Professor.findById(professor);
+    // Validate professor
+    const prof = await Professor.findById(professor).populate('courses');
+    if (!prof) return res.status(404).json({ message: "Professor not found" });
 
-    if (!prof) {
-      return res.status(404).json({ message: "Professor not found" });
-    }
-
-    if (prof.courses.length > 0) {
-      return res.status(400).json({ message: "Professor is already assigned to another course" });
+    // Check if professor has any active courses (status === "Published")
+    const hasActiveCourse = prof.courses.some(course => course.status === "Published");
+    if (hasActiveCourse) {
+      return res.status(400).json({ message: "Professor is already assigned to an active course. Please complete or archive it before assigning a new one." });
     }
 
     // Create the course with the professor assigned

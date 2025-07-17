@@ -8,6 +8,74 @@ const path = require('path');
 const { sendEmail } = require('../utils/mailer');
 const { generateCertificate } = require('../utils/certificateGenerator');
 const uploadCertificateToCloudinary = require('../utils/uploadCertificateToCloudinary');
+const Batch = require('../models/Batch'); // ← import Batch model
+
+
+
+exports.completeCoursesByBatch = async (req, res) => {
+  try {
+    const { batchId } = req.body;
+
+    if (!batchId) return res.status(400).json({ message: "batchId is required" });
+
+    const batch = await Batch.findById(batchId).populate('users').populate('course');
+
+    if (!batch) return res.status(404).json({ message: "Batch not found" });
+
+    const course = batch.course;
+    const completedUsers = [];
+
+    for (const user of batch.users) {
+      const progress = await Progress.findOne({ user: user._id, course: course._id });
+      if (!progress || progress.isCompleted) continue;
+
+      const fileName = `CERT-${user._id}-${Date.now()}.pdf`;
+      const localPath = path.join(__dirname, `../certificates/${fileName}`);
+
+      await generateCertificate({
+        userName: user.name,
+        courseTitle: course.title,
+        outputPath: localPath
+      });
+
+      const certificateUrl = await uploadCertificateToCloudinary(localPath, fileName);
+
+      progress.isCompleted = true;
+      progress.completedAt = new Date();
+      progress.certificateUrl = certificateUrl;
+      await progress.save();
+
+      const htmlContent = `
+        <div style="font-family: Arial; padding: 20px; background: #f4f4f4; border-radius: 10px;">
+          <h2 style="color: #2b5a9e;">🎓 Congratulations ${user.name}!</h2>
+          <p>You have successfully completed the <strong>${course.title}</strong> course.</p>
+          <p>Your certificate is ready. Click the button below to download it:</p>
+          <a href="${certificateUrl}" target="_blank" 
+             style="display: inline-block; margin-top: 15px; padding: 10px 20px; background: #2b5a9e; color: white; text-decoration: none; border-radius: 5px;">
+             🎉 View Your Certificate
+          </a>
+          <p style="margin-top: 20px;">Thank you for learning with <strong>Signavox Career Ladder</strong>!</p>
+        </div>
+      `;
+
+      await sendCertificateMail(user.email, user.name, course.title, certificateUrl, htmlContent);
+      completedUsers.push(user._id);
+    }
+
+    return res.status(200).json({
+      message: `${completedUsers.length} users in batch marked as completed and emailed`,
+      batchId,
+      courseId: course._id,
+      completedUsers
+    });
+
+  } catch (error) {
+    console.error('Batch completion error:', error);
+    return res.status(500).json({ message: "Course completion by batch failed", error });
+  }
+};
+
+
 
 
 // Create or update progress
