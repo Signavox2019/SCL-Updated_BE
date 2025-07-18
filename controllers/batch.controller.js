@@ -162,7 +162,12 @@ exports.assignQuizToBatch = async (req, res) => {
 exports.getBatch = async (req, res) => {
   try {
     const batch = await Batch.findById(req.params.id)
-      .populate('course')
+      .populate({
+        path: 'course',
+        populate: {
+          path: 'modules.lessons.topics', // Ensure all levels are populated
+        }
+      })
       .populate('users', 'name email')
       .populate('professor');
 
@@ -170,8 +175,26 @@ exports.getBatch = async (req, res) => {
 
     const course = batch.course;
     const moduleCount = course.modules?.length || 0;
-    const lessonCount = course.modules?.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0);
     const totalUsers = batch.users.length;
+
+    // Prepare title lookup maps
+    const moduleMap = {};
+    const lessonMap = {};
+    const topicMap = {};
+
+    for (const module of course.modules) {
+      moduleMap[module._id.toString()] = module.moduleTitle;
+      for (const lesson of module.lessons || []) {
+        lessonMap[lesson._id.toString()] = lesson.title;
+        for (const topic of lesson.topics || []) {
+          topicMap[topic._id.toString()] = topic.title;
+        }
+      }
+    }
+
+    const lessonCount = course.modules.reduce(
+      (acc, mod) => acc + (mod.lessons?.length || 0), 0
+    );
 
     let totalCompletedModules = 0;
     let totalCompletedLessons = 0;
@@ -185,32 +208,48 @@ exports.getBatch = async (req, res) => {
 
           const completedModules = progress?.completedModules?.length || 0;
           const completedLessons = progress?.completedModules?.reduce(
-            (acc, mod) => acc + (mod.completedLessons?.length || 0),
-            0
+            (acc, mod) => acc + (mod.completedLessons?.length || 0), 0
           );
 
-          // Tally batch-wide totals
           totalCompletedModules += completedModules;
           totalCompletedLessons += completedLessons;
 
-          // Aggregate detailed progress
-          (progress?.completedModules || []).forEach(mod => {
+          // Enhance detailed with titles
+          const detailedProgress = (progress?.completedModules || []).map(mod => ({
+            moduleId: mod.moduleId,
+            moduleTitle: moduleMap[mod.moduleId] || '',
+            completedLessons: (mod.completedLessons || []).map(les => ({
+              lessonId: les.lessonId,
+              lessonTitle: lessonMap[les.lessonId] || '',
+              completedTopics: (les.completedTopics || []).map(tid => ({
+                topicId: tid,
+                topicTitle: topicMap[tid] || ''
+              }))
+            }))
+          }));
+
+          // Aggregate batch progress
+          for (const mod of detailedProgress) {
             if (!aggregatedDetailedProgress[mod.moduleId]) {
-              aggregatedDetailedProgress[mod.moduleId] = { completedLessons: {} };
+              aggregatedDetailedProgress[mod.moduleId] = {
+                moduleTitle: mod.moduleTitle,
+                completedLessons: {}
+              };
             }
 
-            mod.completedLessons.forEach(lesson => {
-              if (!aggregatedDetailedProgress[mod.moduleId].completedLessons[lesson.lessonId]) {
-                aggregatedDetailedProgress[mod.moduleId].completedLessons[lesson.lessonId] = {
+            for (const les of mod.completedLessons) {
+              if (!aggregatedDetailedProgress[mod.moduleId].completedLessons[les.lessonId]) {
+                aggregatedDetailedProgress[mod.moduleId].completedLessons[les.lessonId] = {
+                  lessonTitle: les.lessonTitle,
                   completedTopics: []
                 };
               }
 
-              aggregatedDetailedProgress[mod.moduleId].completedLessons[lesson.lessonId].completedTopics.push(
-                ...lesson.completedTopics
+              aggregatedDetailedProgress[mod.moduleId].completedLessons[les.lessonId].completedTopics.push(
+                ...les.completedTopics.map(t => t.topicId)
               );
-            });
-          });
+            }
+          }
 
           return {
             userId: user._id,
@@ -230,7 +269,7 @@ exports.getBatch = async (req, res) => {
                 total: lessonCount,
                 percent: lessonCount ? Math.round((completedLessons / lessonCount) * 100) : 0
               },
-              detailed: progress?.completedModules || []
+              detailed: detailedProgress
             }
           };
         } catch (err) {
@@ -247,16 +286,24 @@ exports.getBatch = async (req, res) => {
       })
     );
 
-    // Construct `batchProgress.detailed` from aggregatedDetailedProgress
+    // Construct detailed batch progress with titles
     const detailedBatchProgress = Object.entries(aggregatedDetailedProgress).map(
       ([moduleId, moduleData]) => {
         const completedLessons = Object.entries(moduleData.completedLessons).map(
           ([lessonId, lessonData]) => ({
             lessonId,
-            completedTopics: [...new Set(lessonData.completedTopics)] // unique topics
+            lessonTitle: lessonData.lessonTitle,
+            completedTopics: [...new Set(lessonData.completedTopics)].map(topicId => ({
+              topicId,
+              topicTitle: topicMap[topicId] || ''
+            }))
           })
         );
-        return { moduleId, completedLessons };
+        return {
+          moduleId,
+          moduleTitle: moduleData.moduleTitle,
+          completedLessons
+        };
       }
     );
 
@@ -280,7 +327,6 @@ exports.getBatch = async (req, res) => {
       detailed: detailedBatchProgress
     };
 
-    // ✅ Final Response
     res.status(200).json({
       message: 'Batch details with user and batch progress',
       batchId: batch._id,
@@ -304,6 +350,7 @@ exports.getBatch = async (req, res) => {
     res.status(500).json({ message: 'Error fetching batch details', error });
   }
 };
+
 
 // Update batch
 exports.updateBatch = async (req, res) => {
@@ -472,6 +519,7 @@ exports.updateBatch = async (req, res) => {
     });
   }
 };
+
 // Delete batch
 exports.deleteBatch = async (req, res) => {
   try {

@@ -24,7 +24,7 @@ exports.getAllProfessors = async (req, res) => {
 // Get single professor
 exports.getProfessor = async (req, res) => {
   try {
-    const professor = await Professor.findById(req.params.id).populate('courses', 'title');
+    const professor = await Professor.findById(req.params.id).populate('courses');
     if (!professor) return res.status(404).json({ message: "Professor not found" });
     res.status(200).json(professor);
   } catch (error) {
