@@ -12,7 +12,7 @@ router.get('/available-users/:courseId', batchController.getAvailableUsersForBat
 router.get('/user-breakdown/:courseId/:batchId', batchController.getBatchUserBreakdown);
 
 // routes/batchRoutes.js
-router.put('/:batchId/progress', protect, allowRoles('admin'), batchController.updateBatchCourseProgress);
+router.put('/markAsCompleted/:id', protect, allowRoles('admin'), batchController.markCourseCompleted);
 
 router.get('/', protect, allowRoles('admin'), batchController.getAllBatches);
 router.post('/assign-quiz', protect, allowRoles('admin'), batchController.assignQuizToBatch);

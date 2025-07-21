@@ -377,6 +377,260 @@ exports.getBatch = async (req, res) => {
   }
 };
 
+
+// Update batch
+// exports.updateBatch = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       batchName,
+//       professor,
+//       course,
+//       users,
+//       startDate,
+//       endDate,
+//       quizzes,
+//       events,
+//       progressUpdates,
+//       isCourseCompleted = false
+//     } = req.body;
+
+//     let batch = await Batch.findById(id);
+//     if (!batch) return res.status(404).json({ message: 'Batch not found' });
+
+//     if (batchName !== undefined) batch.batchName = batchName;
+//     if (professor !== undefined) batch.professor = professor;
+//     if (course !== undefined) batch.course = course;
+//     if (users !== undefined) batch.users = users;
+//     if (startDate !== undefined) batch.startDate = startDate;
+//     if (endDate !== undefined) batch.endDate = endDate;
+//     if (quizzes !== undefined) batch.quizzes = quizzes;
+//     if (events !== undefined) batch.events = events;
+
+//     const courseId = course || batch.course;
+
+//     if (progressUpdates && Array.isArray(progressUpdates)) {
+//       batch.progress = progressUpdates;
+
+//       const courseDoc = await Course.findById(courseId).populate({
+//         path: 'modules.lessons.topics'
+//       });
+
+//       const moduleMap = {};
+//       for (const mod of courseDoc.modules) {
+//         moduleMap[mod._id.toString()] = {};
+//         for (const lesson of mod.lessons) {
+//           moduleMap[mod._id.toString()][lesson._id.toString()] = lesson.topics.map((t) => ({
+//             topicId: t._id
+//           }));
+//         }
+//       }
+
+//       for (const userId of batch.users) {
+//         const normalizedProgress = progressUpdates.map((mod) => ({
+//           moduleId: mod.moduleId,
+//           completedLessons: (mod.completedLessons || []).map((lesson) => ({
+//             lessonId: lesson.lessonId,
+//             completedTopics: (lesson.completedTopics || [])
+//               .filter((t) => t && (typeof t === 'string' || typeof t === 'object'))
+//               .map((t) =>
+//                 typeof t === 'string'
+//                   ? { topicId: t }
+//                   : t.topicId
+//                     ? { topicId: t.topicId }
+//                     : null
+//               )
+//               .filter(Boolean)
+//               // fallback: if empty, fill from course
+//               .concat(
+//                 (!lesson.completedTopics || lesson.completedTopics.length === 0)
+//                   ? moduleMap[mod.moduleId.toString()]?.[lesson.lessonId.toString()] || []
+//                   : []
+//               )
+//           }))
+//         }));
+
+//         await Progress.findOneAndUpdate(
+//           { user: userId, course: courseId },
+//           {
+//             completedModules: normalizedProgress,
+//             ...(isCourseCompleted && {
+//               isCompleted: true,
+//               completedAt: new Date(),
+//               certificateUrl: `/certificates/CERT-${userId}-${Date.now()}.pdf`
+//             }),
+//             $setOnInsert: {
+//               user: userId,
+//               course: courseId
+//             }
+//           },
+//           { new: true, upsert: true }
+//         );
+//       }
+//     }
+
+
+
+//     await batch.save();
+
+//     // 🔄 Automatically mark all users' progress as completed if course is marked completed
+//     if (isCourseCompleted && (!progressUpdates || progressUpdates.length === 0)) {
+//       const userIds = batch.users;
+//       const courseDoc = await Course.findById(batch.course).populate({
+//         path: 'modules.lessons.topics'
+//       });
+
+//       const fullProgress = courseDoc.modules.map((mod) => ({
+//         moduleId: mod._id,
+//         completedLessons: (mod.lessons || []).map((lesson) => ({
+//           lessonId: lesson._id,
+//           completedTopics: (lesson.topics || []).map((topic) => ({
+//             topicId: topic._id
+//           }))
+//         }))
+//       }));
+
+//       await Promise.all(
+//         userIds.map(async (userId) => {
+//           await Progress.findOneAndUpdate(
+//             { user: userId, course: courseDoc._id },
+//             {
+//               completedModules: fullProgress,
+//               isCompleted: true,
+//               completedAt: new Date(),
+//               certificateUrl: `/certificates/CERT-${userId}-${Date.now()}.pdf`,
+//               $setOnInsert: {
+//                 user: userId,
+//                 course: courseDoc._id
+//               }
+//             },
+//             { upsert: true, new: true }
+//           );
+//         })
+//       );
+//     }
+
+
+//     // Fetch updated info
+//     const enrichedBatch = await Batch.findById(batch._id)
+//       .populate('course')
+//       .populate('users', 'name email')
+//       .populate('professor', 'name email')
+//       .lean();
+
+//     const courseIdFinal = enrichedBatch.course?._id;
+
+//     const totalModules = enrichedBatch.course?.modules?.length || 0;
+//     const totalLessons = enrichedBatch.course?.modules?.reduce(
+//       (sum, mod) => sum + (mod.lessons?.length || 0),
+//       0
+//     );
+
+//     const userProgressDetails = [];
+
+//     for (const user of enrichedBatch.users) {
+//       const progress = await Progress.findOne({ user: user._id, course: courseIdFinal }).lean();
+
+//       const completedModules = progress?.completedModules?.length || 0;
+//       const completedLessons = progress?.completedModules?.reduce(
+//         (sum, mod) => sum + (mod.completedLessons?.length || 0),
+//         0
+//       );
+
+//       userProgressDetails.push({
+//         userId: user._id,
+//         name: user.name,
+//         email: user.email,
+//         isCompleted: progress?.isCompleted || false,
+//         certificateUrl: progress?.certificateUrl || null,
+//         updatedAt: progress?.updatedAt || null,
+//         progress: {
+//           modules: {
+//             completed: completedModules,
+//             total: totalModules,
+//             percent: totalModules ? Math.round((completedModules / totalModules) * 100) : 0
+//           },
+//           lessons: {
+//             completed: completedLessons,
+//             total: totalLessons,
+//             percent: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0
+//           },
+//           detailed: progress?.completedModules || []  // 👈 Include detailed structure
+//         }
+//       });
+//     }
+
+//     // 🎯 Send email + notification to admin if course is completed
+//     if (isCourseCompleted) {
+//       try {
+//         const adminEmail = process.env.ADMIN_EMAIL;
+//         if (!adminEmail) throw new Error('Admin email not defined in environment variables');
+
+//         const subject = `🎓 Certificates Pending: ${enrichedBatch.batchName}`;
+//         const html = `
+//           <div style="font-family: 'Segoe UI', sans-serif; padding: 20px;">
+//             <h2 style="color: #00b894;">🚀 Course Completion Alert</h2>
+//             <p>Hey Admin,</p>
+//             <p><strong>${enrichedBatch.batchName}</strong> has completed the course <strong>${enrichedBatch.course.title}</strong>.</p>
+//             <p>It's time to generate certificates for <strong>${enrichedBatch.users.length} interns</strong>.</p>
+//             <a href="${process.env.ADMIN_DASHBOARD_URL || '#'}" style="padding: 10px 20px; background-color: #0984e3; color: #fff; text-decoration: none; border-radius: 5px;">Generate Certificates Now</a>
+//             <br><br>
+//             <p style="font-size: 14px; color: gray;">Sent from Signavox Career Ladder System</p>
+//           </div>
+//         `;
+
+//         // await sendEmail(adminEmail, subject, html);
+//         await sendEmail(adminEmail, `${enrichedBatch.batchName}`, `${enrichedBatch.course.title}`, `${enrichedBatch.users.length}`);
+
+//         const adminUser = await User.findOne({ email: adminEmail });
+//         if (adminUser) {
+//           await Notification.create({
+//             user: adminUser._id,
+//             createdBy: null,
+//             targetBatches: [batch._id],
+//             title: `Generate certificates for ${enrichedBatch.batchName}`,
+//             message: `The batch "${enrichedBatch.batchName}" has completed the course. Certificates are pending.`,
+//             type: 'certificate',
+//             link: `${process.env.ADMIN_DASHBOARD_URL || '#'}/certificates?batch=${batch._id}`
+//           });
+//         }
+//       } catch (notifyErr) {
+//         console.error('❌ Error sending admin certificate email/notification:', notifyErr);
+//       }
+//     }
+
+
+
+//     return res.status(200).json({
+//       message: 'Batch updated successfully with progress sync',
+//       batchId: enrichedBatch._id,
+//       batchName: enrichedBatch.batchName,
+//       startDate: enrichedBatch.startDate,
+//       endDate: enrichedBatch.endDate,
+//       course: {
+//         id: enrichedBatch.course?._id,
+//         title: enrichedBatch.course?.title,
+//         duration: enrichedBatch.course?.duration,
+//         level: enrichedBatch.course?.level,
+//         type: enrichedBatch.course?.type,
+//         category: enrichedBatch.course?.category
+//       },
+//       professor: enrichedBatch.professor || null,
+//       totalUsers: enrichedBatch.users.length,
+//       users: userProgressDetails,
+//       batchProgress: enrichedBatch.progress || [],
+
+//       courseCompleted: isCourseCompleted
+//     });
+//   } catch (error) {
+//     console.error('❌ Error updating batch:', error);
+//     res.status(500).json({
+//       message: 'Error updating batch',
+//       error: error.message || error.toString()
+//     });
+//   }
+// };
+
 exports.updateBatch = async (req, res) => {
   try {
     const { id } = req.params;
@@ -522,6 +776,7 @@ exports.updateBatch = async (req, res) => {
     for (const user of enrichedBatch.users) {
       const progress = await Progress.findOne({ user: user._id, course: courseIdFinal }).lean();
 
+      // 🧠 Deduplicate completed lesson IDs
       const lessonSet = new Set();
       (progress?.completedModules || []).forEach((mod) => {
         (mod.completedLessons || []).forEach((les) => {
@@ -555,6 +810,7 @@ exports.updateBatch = async (req, res) => {
       });
     }
 
+    // 📊 Calculate batchProgress
     let totalCompletedModules = 0;
     let totalCompletedLessons = 0;
 
@@ -582,13 +838,26 @@ exports.updateBatch = async (req, res) => {
             ? Math.round((totalCompletedLessons / (totalUsers * totalLessons)) * 100)
             : 0
       },
-      detailed: []
+      detailed: [] // Optional: populate if needed
     };
 
     if (isCourseCompleted) {
       try {
         const adminEmail = process.env.ADMIN_EMAIL;
         if (!adminEmail) throw new Error('Admin email not defined in environment variables');
+
+        const subject = `🎓 Certificates Pending: ${enrichedBatch.batchName}`;
+        const html = `
+          <div style="font-family: 'Segoe UI', sans-serif; padding: 20px;">
+            <h2 style="color: #00b894;">🚀 Course Completion Alert</h2>
+            <p>Hey Admin,</p>
+            <p><strong>${enrichedBatch.batchName}</strong> has completed the course <strong>${enrichedBatch.course.title}</strong>.</p>
+            <p>It's time to generate certificates for <strong>${enrichedBatch.users.length} interns</strong>.</p>
+            <a href="${process.env.ADMIN_DASHBOARD_URL || '#'}" style="padding: 10px 20px; background-color: #0984e3; color: #fff; text-decoration: none; border-radius: 5px;">Generate Certificates Now</a>
+            <br><br>
+            <p style="font-size: 14px; color: gray;">Sent from Signavox Career Ladder System</p>
+          </div>
+        `;
 
         await sendEmail(adminEmail, `${enrichedBatch.batchName}`, `${enrichedBatch.course.title}`, `${enrichedBatch.users.length}`);
 
@@ -604,15 +873,6 @@ exports.updateBatch = async (req, res) => {
             link: `${process.env.ADMIN_DASHBOARD_URL || '#'}/certificates?batch=${batch._id}`
           });
         }
-
-        setTimeout(async () => {
-          const updatedBatch = await Batch.findById(batch._id);
-          if (updatedBatch && updatedBatch.courseCompleted && updatedBatch.isActive) {
-            updatedBatch.isActive = false;
-            await updatedBatch.save();
-            console.log(`Batch "${updatedBatch.batchName}" auto-deactivated after 15 days`);
-          }
-        }, 15 * 24 * 60 * 60 * 1000);
       } catch (notifyErr) {
         console.error('❌ Error sending admin certificate email/notification:', notifyErr);
       }
@@ -647,8 +907,6 @@ exports.updateBatch = async (req, res) => {
     });
   }
 };
-
-
 
 
 // Delete batch

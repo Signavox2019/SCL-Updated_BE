@@ -7,6 +7,11 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   generatedPassword: { type: String, select: false },
   role: { type: String, enum: ['intern', 'admin'], default: 'intern' },
+  approveStatus: {
+    type: String,
+    enum: ['approved', 'rejected', 'waiting'],
+    default: 'waiting'
+  },
   isApproved: { type: Boolean, default: false },
   profileImage: String,
   phone: String,

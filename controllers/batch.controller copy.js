@@ -177,25 +177,20 @@ exports.getBatch = async (req, res) => {
     const moduleCount = course.modules?.length || 0;
     const totalUsers = batch.users.length;
 
-    // Prepare title and lookup maps
+    // Prepare title lookup maps
     const moduleMap = {};
     const lessonMap = {};
     const topicMap = {};
-    const lessonToTopicMap = {};
 
     for (const module of course.modules) {
       moduleMap[module._id.toString()] = module.moduleTitle;
       for (const lesson of module.lessons || []) {
         lessonMap[lesson._id.toString()] = lesson.title;
-        lessonToTopicMap[lesson._id.toString()] = []; // Init topic list
-
         for (const topic of lesson.topics || []) {
           topicMap[topic._id.toString()] = topic.title;
-          lessonToTopicMap[lesson._id.toString()].push(topic._id.toString());
         }
       }
     }
-
 
     const lessonCount = course.modules.reduce(
       (acc, mod) => acc + (mod.lessons?.length || 0), 0
@@ -212,17 +207,9 @@ exports.getBatch = async (req, res) => {
           const progress = await Progress.findOne({ user: user._id, course: course._id });
 
           const completedModules = progress?.completedModules?.length || 0;
-          // Step 1: Collect all completed lessonIds into a Set to avoid duplicates
-          const completedLessonSet = new Set();
-
-          (progress?.completedModules || []).forEach(mod => {
-            (mod.completedLessons || []).forEach(les => {
-              completedLessonSet.add(les.lessonId.toString());
-            });
-          });
-
-          const completedLessons = completedLessonSet.size; // accurate count
-
+          const completedLessons = progress?.completedModules?.reduce(
+            (acc, mod) => acc + (mod.completedLessons?.length || 0), 0
+          );
 
           totalCompletedModules += completedModules;
           totalCompletedLessons += completedLessons;
@@ -234,17 +221,10 @@ exports.getBatch = async (req, res) => {
             completedLessons: (mod.completedLessons || []).map(les => ({
               lessonId: les.lessonId,
               lessonTitle: lessonMap[les.lessonId] || '',
-              completedTopics: progress?.isCompleted
-                ? (lessonToTopicMap[les.lessonId] || []).map(tid => ({
-                  topicId: tid,
-                  topicTitle: topicMap[tid] || ''
-                }))
-                : (les.completedTopics || []).map(tid => ({
-                  topicId: tid,
-                  topicTitle: topicMap[tid] || ''
-                }))
-
-
+              completedTopics: (les.completedTopics || []).map(tid => ({
+                topicId: tid,
+                topicTitle: topicMap[tid] || ''
+              }))
             }))
           }));
 
@@ -333,7 +313,7 @@ exports.getBatch = async (req, res) => {
         total: totalUsers * moduleCount,
         percent:
           totalUsers && moduleCount
-            ? Math.round((totalCompletedModules / (moduleCount)) * 100)
+            ? Math.round((totalCompletedModules / (totalUsers * moduleCount)) * 100)
             : 0
       },
       lessons: {
@@ -341,13 +321,11 @@ exports.getBatch = async (req, res) => {
         total: totalUsers * lessonCount,
         percent:
           totalUsers && lessonCount
-            ? Math.round((totalCompletedLessons / (lessonCount)) * 100)
+            ? Math.round((totalCompletedLessons / (totalUsers * lessonCount)) * 100)
             : 0
       },
       detailed: detailedBatchProgress
     };
-
-    const courseCompleted = usersWithProgress.every((user) => user.isCompleted);
 
     res.status(200).json({
       message: 'Batch details with user and batch progress',
@@ -365,11 +343,7 @@ exports.getBatch = async (req, res) => {
         lessonsCount: lessonCount
       },
       users: usersWithProgress,
-      batchProgress,
-      // courseCompleted, // 👈 Add this field to indicate if batch is complete
-      courseCompleted: batch.courseCompleted, // ✅ include this field
-      isActive: batch.isActive,
-
+      batchProgress
     });
   } catch (error) {
     console.error('Error fetching batch details →', error);
@@ -377,6 +351,8 @@ exports.getBatch = async (req, res) => {
   }
 };
 
+
+// Update batch
 exports.updateBatch = async (req, res) => {
   try {
     const { id } = req.params;
@@ -407,59 +383,19 @@ exports.updateBatch = async (req, res) => {
 
     const courseId = course || batch.course;
 
-    if (progressUpdates && Array.isArray(progressUpdates)) {
+    if (progressUpdates) {
       batch.progress = progressUpdates;
 
-      const courseDoc = await Course.findById(courseId).populate({
-        path: 'modules.lessons.topics'
-      });
-
-      const moduleMap = {};
-      for (const mod of courseDoc.modules) {
-        moduleMap[mod._id.toString()] = {};
-        for (const lesson of mod.lessons) {
-          moduleMap[mod._id.toString()][lesson._id.toString()] = lesson.topics.map((t) => ({
-            topicId: t._id
-          }));
-        }
-      }
-
       for (const userId of batch.users) {
-        const normalizedProgress = progressUpdates.map((mod) => ({
-          moduleId: mod.moduleId,
-          completedLessons: (mod.completedLessons || []).map((lesson) => ({
-            lessonId: lesson.lessonId,
-            completedTopics: (lesson.completedTopics || [])
-              .filter((t) => t && (typeof t === 'string' || typeof t === 'object'))
-              .map((t) =>
-                typeof t === 'string'
-                  ? { topicId: t }
-                  : t.topicId
-                    ? { topicId: t.topicId }
-                    : null
-              )
-              .filter(Boolean)
-              .concat(
-                (!lesson.completedTopics || lesson.completedTopics.length === 0)
-                  ? moduleMap[mod.moduleId.toString()]?.[lesson.lessonId.toString()] || []
-                  : []
-              )
-          }))
-        }));
-
         await Progress.findOneAndUpdate(
           { user: userId, course: courseId },
           {
-            completedModules: normalizedProgress,
+            completedModules: progressUpdates,
             ...(isCourseCompleted && {
               isCompleted: true,
               completedAt: new Date(),
               certificateUrl: `/certificates/CERT-${userId}-${Date.now()}.pdf`
-            }),
-            $setOnInsert: {
-              user: userId,
-              course: courseId
-            }
+            })
           },
           { new: true, upsert: true }
         );
@@ -468,6 +404,7 @@ exports.updateBatch = async (req, res) => {
 
     await batch.save();
 
+    // 🔄 Automatically mark all users' progress as completed if course is marked completed
     if (isCourseCompleted && (!progressUpdates || progressUpdates.length === 0)) {
       const userIds = batch.users;
       const courseDoc = await Course.findById(batch.course).populate({
@@ -504,6 +441,8 @@ exports.updateBatch = async (req, res) => {
       );
     }
 
+
+    // Fetch updated info
     const enrichedBatch = await Batch.findById(batch._id)
       .populate('course')
       .populate('users', 'name email')
@@ -511,6 +450,7 @@ exports.updateBatch = async (req, res) => {
       .lean();
 
     const courseIdFinal = enrichedBatch.course?._id;
+
     const totalModules = enrichedBatch.course?.modules?.length || 0;
     const totalLessons = enrichedBatch.course?.modules?.reduce(
       (sum, mod) => sum + (mod.lessons?.length || 0),
@@ -522,15 +462,11 @@ exports.updateBatch = async (req, res) => {
     for (const user of enrichedBatch.users) {
       const progress = await Progress.findOne({ user: user._id, course: courseIdFinal }).lean();
 
-      const lessonSet = new Set();
-      (progress?.completedModules || []).forEach((mod) => {
-        (mod.completedLessons || []).forEach((les) => {
-          lessonSet.add(les.lessonId.toString());
-        });
-      });
-
       const completedModules = progress?.completedModules?.length || 0;
-      const completedLessons = lessonSet.size;
+      const completedLessons = progress?.completedModules?.reduce(
+        (sum, mod) => sum + (mod.completedLessons?.length || 0),
+        0
+      );
 
       userProgressDetails.push({
         userId: user._id,
@@ -550,46 +486,31 @@ exports.updateBatch = async (req, res) => {
             total: totalLessons,
             percent: totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0
           },
-          detailed: progress?.completedModules || []
+          detailed: progress?.completedModules || []  // 👈 Include detailed structure
         }
       });
     }
 
-    let totalCompletedModules = 0;
-    let totalCompletedLessons = 0;
-
-    userProgressDetails.forEach((user) => {
-      totalCompletedModules += user.progress.modules.completed;
-      totalCompletedLessons += user.progress.lessons.completed;
-    });
-
-    const totalUsers = userProgressDetails.length;
-
-    const batchProgress = {
-      modules: {
-        completed: totalCompletedModules,
-        total: totalUsers * totalModules,
-        percent:
-          totalUsers && totalModules
-            ? Math.round((totalCompletedModules / (totalUsers * totalModules)) * 100)
-            : 0
-      },
-      lessons: {
-        completed: totalCompletedLessons,
-        total: totalUsers * totalLessons,
-        percent:
-          totalUsers && totalLessons
-            ? Math.round((totalCompletedLessons / (totalUsers * totalLessons)) * 100)
-            : 0
-      },
-      detailed: []
-    };
-
+    // 🎯 Send email + notification to admin if course is completed
     if (isCourseCompleted) {
       try {
         const adminEmail = process.env.ADMIN_EMAIL;
         if (!adminEmail) throw new Error('Admin email not defined in environment variables');
 
+        const subject = `🎓 Certificates Pending: ${enrichedBatch.batchName}`;
+        const html = `
+          <div style="font-family: 'Segoe UI', sans-serif; padding: 20px;">
+            <h2 style="color: #00b894;">🚀 Course Completion Alert</h2>
+            <p>Hey Admin,</p>
+            <p><strong>${enrichedBatch.batchName}</strong> has completed the course <strong>${enrichedBatch.course.title}</strong>.</p>
+            <p>It's time to generate certificates for <strong>${enrichedBatch.users.length} interns</strong>.</p>
+            <a href="${process.env.ADMIN_DASHBOARD_URL || '#'}" style="padding: 10px 20px; background-color: #0984e3; color: #fff; text-decoration: none; border-radius: 5px;">Generate Certificates Now</a>
+            <br><br>
+            <p style="font-size: 14px; color: gray;">Sent from Signavox Career Ladder System</p>
+          </div>
+        `;
+
+        // await sendEmail(adminEmail, subject, html);
         await sendEmail(adminEmail, `${enrichedBatch.batchName}`, `${enrichedBatch.course.title}`, `${enrichedBatch.users.length}`);
 
         const adminUser = await User.findOne({ email: adminEmail });
@@ -604,15 +525,6 @@ exports.updateBatch = async (req, res) => {
             link: `${process.env.ADMIN_DASHBOARD_URL || '#'}/certificates?batch=${batch._id}`
           });
         }
-
-        setTimeout(async () => {
-          const updatedBatch = await Batch.findById(batch._id);
-          if (updatedBatch && updatedBatch.courseCompleted && updatedBatch.isActive) {
-            updatedBatch.isActive = false;
-            await updatedBatch.save();
-            console.log(`Batch "${updatedBatch.batchName}" auto-deactivated after 15 days`);
-          }
-        }, 15 * 24 * 60 * 60 * 1000);
       } catch (notifyErr) {
         console.error('❌ Error sending admin certificate email/notification:', notifyErr);
       }
@@ -633,11 +545,10 @@ exports.updateBatch = async (req, res) => {
         category: enrichedBatch.course?.category
       },
       professor: enrichedBatch.professor || null,
-      totalUsers,
+      totalUsers: enrichedBatch.users.length,
       users: userProgressDetails,
-      batchProgress,
-      courseCompleted: isCourseCompleted,
-      isActive: enrichedBatch.isActive
+      batchProgress: enrichedBatch.progress || [],
+      courseCompleted: isCourseCompleted
     });
   } catch (error) {
     console.error('❌ Error updating batch:', error);
@@ -647,9 +558,6 @@ exports.updateBatch = async (req, res) => {
     });
   }
 };
-
-
-
 
 // Delete batch
 exports.deleteBatch = async (req, res) => {
@@ -805,20 +713,44 @@ exports.getBatchUserBreakdown = async (req, res) => {
 };
 
 
-exports.markCourseCompleted = async (req, res) => {
+exports.updateBatchCourseProgress = async (req, res) => {
   try {
-    const batch = await Batch.findById(req.params.id);
-    if (!batch) return res.status(404).json({ message: "Batch not found" });
+    const { batchId } = req.params;
+    const { progressUpdates, isCourseCompleted = false } = req.body;
 
-    batch.courseCompleted = true;
-    batch.courseCompletedAt = new Date(); // ✅ Track completion time
+    const batch = await Batch.findById(batchId).populate('users').populate('course');
+    if (!batch) return res.status(404).json({ message: 'Batch not found' });
+
+    const courseId = batch.course._id;
+
+    // Step 1: Save progress in the batch
+    batch.progress = progressUpdates;
     await batch.save();
 
-    res.status(200).json({ message: "Batch course marked as completed", batch });
+    // Step 2: Update all users in the batch
+    for (const user of batch.users) {
+      const progressDoc = await Progress.findOneAndUpdate(
+        { user: user._id, course: courseId },
+        {
+          completedModules: progressUpdates,
+          ...(isCourseCompleted && {
+            isCompleted: true,
+            completedAt: new Date(),
+            certificateUrl: `/certificates/CERT-${user._id}-${Date.now()}.pdf`
+          })
+        },
+        { new: true, upsert: true }
+      );
+    }
+
+    res.status(200).json({
+      message: 'Batch progress updated and reflected for all users',
+      batchId: batch._id,
+      updatedProgress: progressUpdates
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Error completing course", error: error.message });
+    console.error('Error updating batch progress:', error);
+    res.status(500).json({ message: 'Internal server error', error });
   }
 };
-
-
-

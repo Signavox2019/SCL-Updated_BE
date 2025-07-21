@@ -21,7 +21,18 @@ const batchSchema = new mongoose.Schema({
       description: String,
       date: Date
     }
-  ]
+  ],
+  courseCompleted: {
+    type: Boolean,
+    default: false
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  courseCompletedAt: { type: Date }
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model('Batch', batchSchema);
