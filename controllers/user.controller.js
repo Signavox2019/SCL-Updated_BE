@@ -185,3 +185,71 @@ exports.getWaitingUsers = async (req, res) => {
   }
 };
 
+exports.updateUserByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 🔍 Find user first
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // ✅ Update allowed fields only
+    const allowedFields = [
+      'name', 'email', 'phone', 'college', 'currentYear', 'cgpa',
+      'branch', 'role', 'resume', 'isApproved', 'approveStatus',
+      'courseEnrolled', 'courseProgress'
+    ];
+
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
+    });
+
+    await user.save();
+
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({
+      message: "Failed to update user",
+      error: error.message || error
+    });
+  }
+};
+
+
+
+
+exports.updateOwnProfile = async (req, res) => {
+  try {
+    const userId = req.user._id; // populated by auth middleware
+    const role = req.user.role;
+    const updates = req.body;
+
+    // Define field access based on role
+    const internFields = [
+      'name', 'phone', 'profileImage', 'resume',
+      'collegeName', 'department', 'university',
+      'degree', 'specialization', 'cgpa',
+      'currentYear', 'isGraduated', 'yearOfPassing',
+      'hasExperience', 'previousCompany', 'position', 'yearsOfExperience'
+    ];
+
+    const adminFields = [...internFields, 'email']; // admins can change email too
+
+    const allowedFields = role === 'admin' ? adminFields : internFields;
+
+    const filteredData = {};
+    for (let field of allowedFields) {
+      if (updates[field] !== undefined) {
+        filteredData[field] = updates[field];
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, filteredData, { new: true });
+    res.status(200).json({ message: "Profile updated", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update profile", error });
+  }
+};

@@ -26,4 +26,10 @@ router.delete('/:id', protect, allowRoles('admin'), userController.deleteUser);
 // Get user metrics
 router.get('/stats/metrics', protect, allowRoles('admin'), userController.userStats);
 
+
+
+router.put('/admin/update-user/:id', protect, allowRoles('admin'), userController.updateUserByAdmin);
+router.put('/me/update-profile', protect, userController.updateOwnProfile);
+
+
 module.exports = router;
