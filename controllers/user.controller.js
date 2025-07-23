@@ -46,9 +46,11 @@ exports.updateUserStatus = async (req, res) => {
     }
 
     // Find user and include generatedPassword
+    // let user = await User.findById(req.params.id).select('+generatedPassword');
     let user = await User.findById(req.params.id).select('+generatedPassword');
-    if (!user) return res.status(404).json({ message: "User not found" });
 
+    if (!user) return res.status(404).json({ message: "User not found" });
+    console.log('User found:', user);
     // Update approval fields
     user.approveStatus = approveStatus;
     user.isApproved = approveStatus === 'approved';
@@ -56,7 +58,9 @@ exports.updateUserStatus = async (req, res) => {
     await user.save();
 
     // ✅ Send approval email only if approved and password exists
+    // console.log('Generated password:', user.generatedPassword);
     if (approveStatus === 'approved' && user.generatedPassword) {
+      // console.log('Generated password:', user.generatedPassword);
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: user.email,

@@ -19,6 +19,8 @@ router.delete('/:id',  protect, allowRoles('admin'),  batchController.deleteBatc
 
 
 router.post('/send-certificates', protect, allowRoles('admin'), batchController.sendBatchCertificates);
+router.get('/batch-certificates/stats/:batchId', protect, allowRoles('admin'), batchController.getBatchCertificateStatus);
+router.get('/batch-certificates/stats/', protect, allowRoles('admin'), batchController.getAllBatchesCertificateStatus);
 
 // GET /api/batches/available-users/:courseId
 router.get('/available-users/:courseId', batchController.getAvailableUsersForBatch);

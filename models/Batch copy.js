@@ -35,12 +35,7 @@ const batchSchema = new mongoose.Schema({
   courseCompleted: { type: Boolean, default: false },
   courseCompletedAt: { type: Date },
   isActive: { type: Boolean, default: true },
-  // certificatesIssued: { type: Boolean, default: false },
-  certificatesIssuedTo: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User' // or 'Certificate' if you're storing actual certs
-  }],
-  certificatesIssuedAt: { type: Date }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Batch', batchSchema);

@@ -5,6 +5,8 @@ const User = require('../models/User');
 const moment = require('moment');
 const sendEmail = require('../utils/sendAdminBatchCompletionReminder'); // utility you use for mailing
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const Professor = require('../models/Professor');
+const Certificate = require('../models/Certificate');
 
 
 
@@ -254,11 +256,11 @@ exports.getAllBatches = async (req, res) => {
         const mod = moduleMap[moduleId.toString()];
         return mod
           ? {
-              _id: mod._id,
-              title: mod.title,
-              description: mod.description,
-              completedLessons: mod.completedLessons
-            }
+            _id: mod._id,
+            title: mod.title,
+            description: mod.description,
+            completedLessons: mod.completedLessons
+          }
           : null;
       }).filter(Boolean);
 
@@ -405,32 +407,110 @@ exports.getBatchById = async (req, res) => {
       return res.status(404).json({ message: 'Batch not found' });
     }
 
-    const courseModules = batch.course?.modules || [];
-    let totalLessons = 0;
-    courseModules.forEach((mod) => {
-      if (mod.lessons && Array.isArray(mod.lessons)) {
-        totalLessons += mod.lessons.length;
+    const course = batch.course;
+    if (!course) {
+      return res.status(400).json({ message: 'No course assigned to this batch' });
+    }
+
+    // Build lookup maps
+    const moduleMap = {};
+    const lessonMap = {};
+    const topicMap = {};
+
+    course.modules.forEach((mod) => {
+      const modId = mod._id.toString();
+      moduleMap[modId] = {
+        _id: mod._id,
+        title: mod.moduleTitle,
+        description: mod.moduleDescription,
+        completedLessons: [],
+      };
+
+      mod.lessons.forEach((les) => {
+        const lesId = les._id.toString();
+        lessonMap[lesId] = {
+          _id: les._id,
+          title: les.title,
+          moduleId: modId,
+          completedTopics: [],
+        };
+
+        les.topics.forEach((top) => {
+          topicMap[top._id.toString()] = {
+            _id: top._id,
+            title: top.title,
+            lessonId: lesId,
+          };
+        });
+      });
+    });
+
+    const allLessonIds = Object.keys(lessonMap);
+    const completedLessons = batch.batchProgress?.completedLessons || [];
+    const completedTopics = batch.batchProgress?.completedTopics || [];
+
+    const validCompletedLessonIds = completedLessons.filter((id) =>
+      allLessonIds.includes(id.toString())
+    );
+    const uniqueCompletedLessonIds = [...new Set(validCompletedLessonIds.map((id) => id.toString()))];
+
+    const percentage =
+      allLessonIds.length === 0
+        ? 0
+        : Math.round((uniqueCompletedLessonIds.length / allLessonIds.length) * 100);
+
+    // Group topics into lessons
+    completedTopics.forEach((topicId) => {
+      const topic = topicMap[topicId.toString()];
+      if (topic && lessonMap[topic.lessonId]) {
+        lessonMap[topic.lessonId].completedTopics.push({
+          _id: topic._id,
+          title: topic.title,
+        });
       }
     });
 
-    let completedLessons = 0;
-    if (batch.progress && Array.isArray(batch.progress)) {
-      batch.progress.forEach((moduleProgress) => {
-        if (moduleProgress.completedLessons && Array.isArray(moduleProgress.completedLessons)) {
-          completedLessons += moduleProgress.completedLessons.length;
-        }
-      });
-    }
+    // Group lessons into modules
+    uniqueCompletedLessonIds.forEach((lessonId) => {
+      const lesson = lessonMap[lessonId];
+      if (lesson && moduleMap[lesson.moduleId]) {
+        moduleMap[lesson.moduleId].completedLessons.push({
+          _id: lesson._id,
+          title: lesson.title,
+          completedTopics: lesson.completedTopics,
+        });
+      }
+    });
 
-    const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+    const completedModules = (batch.batchProgress?.completedModules || []).map((modId) => {
+      const mod = moduleMap[modId.toString()];
+      if (mod) {
+        return {
+          _id: mod._id,
+          title: mod.title,
+          description: mod.description,
+          completedLessons: mod.completedLessons,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    // Count totals
+    const totalLessons = allLessonIds.length;
+    const completedLessonCount = uniqueCompletedLessonIds.length;
+    const totalTopics = Object.keys(topicMap).length;
+    const completedTopicCount = completedTopics.length;
 
     res.status(200).json({
       message: 'Batch fetched successfully',
       batch,
       progress: {
+        percentage,
         totalLessons,
-        completedLessons,
-        percentage: progressPercentage,
+        completedLessons: completedLessonCount,
+        totalTopics,
+        completedTopics: completedTopicCount,
+        completedModules,
       },
     });
   } catch (error) {
@@ -444,7 +524,280 @@ exports.getBatchById = async (req, res) => {
 
 
 
+
 // Update batch with progress tracking
+// exports.updateBatch = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       batchName,
+//       course,
+//       users,
+//       professor,
+//       startDate,
+//       endDate,
+//       quizzes,
+//       events,
+//       completedModules = [],
+//       completedLessons = [],
+//       completedTopics = [],
+//       markAsCompleted = false
+//     } = req.body;
+
+//     const batch = await Batch.findById(id);
+//     if (!batch) return res.status(404).json({ message: 'Batch not found' });
+
+//     const courseDoc = await Course.findById(course || batch.course).lean();
+//     if (!courseDoc) return res.status(404).json({ message: 'Course not found' });
+
+//     // ✅ Count total lessons across all modules
+//     const allLessons = [];
+//     courseDoc.modules.forEach(mod => {
+//       mod.lessons.forEach(les => {
+//         allLessons.push(les._id.toString());
+//       });
+//     });
+
+//     const totalLessons = allLessons.length;
+
+//     const completedLessonIds = completedLessons.map(id => id.toString());
+//     const uniqueCompletedLessons = [...new Set(completedLessonIds.filter(id => allLessons.includes(id)))];
+
+//     const percentage = totalLessons === 0 ? 0 : Math.round((uniqueCompletedLessons.length / totalLessons) * 100);
+
+//     // ✅ Update batch fields
+//     batch.batchName = batchName || batch.batchName;
+//     batch.course = course || batch.course;
+//     batch.users = users || batch.users;
+//     batch.professor = professor || batch.professor;
+//     batch.startDate = startDate || batch.startDate;
+//     batch.endDate = endDate || batch.endDate;
+//     batch.quizzes = quizzes || batch.quizzes;
+//     batch.events = events || batch.events;
+
+//     batch.batchProgress = {
+//       completedModules,
+//       completedLessons: uniqueCompletedLessons,
+//       completedTopics,
+//       percentage
+//     };
+
+//     // ✅ Mark as completed and send email
+//     // ✅ Handle course completion toggle
+//     if (markAsCompleted && !batch.courseCompleted) {
+//       // ✅ Mark as completed
+//       batch.courseCompleted = true;
+//       batch.courseCompletedAt = new Date();
+
+//       const adminEmail = process.env.ADMIN_EMAIL || ADMIN_EMAIL;
+
+//       await sendEmail(
+//         adminEmail,
+//         `${batch.batchName}`,
+//         `${courseDoc.title}`,  // FIXED: using courseDoc, not batch.course
+//         `${batch.users.length}`
+//       );
+//     } else if (!markAsCompleted && batch.courseCompleted) {
+//       // ❌ Unmark as completed
+//       batch.courseCompleted = false;
+//       batch.courseCompletedAt = null;
+//     }
+//     // ✅ Save the batch
+
+//     await batch.save();
+
+//     // ✅ Create nested structure response
+//     const moduleMap = {};
+//     const lessonMap = {};
+//     const topicMap = {};
+
+//     courseDoc.modules.forEach(mod => {
+//       const modId = mod._id.toString();
+//       moduleMap[modId] = {
+//         _id: mod._id,
+//         title: mod.moduleTitle,
+//         description: mod.moduleDescription,
+//         completedLessons: []
+//       };
+
+//       mod.lessons.forEach(les => {
+//         const lesId = les._id.toString();
+//         lessonMap[lesId] = {
+//           _id: les._id,
+//           title: les.title,
+//           moduleId: modId,
+//           completedTopics: []
+//         };
+
+//         les.topics.forEach(top => {
+//           topicMap[top._id.toString()] = {
+//             _id: top._id,
+//             title: top.title,
+//             lessonId: lesId
+//           };
+//         });
+//       });
+//     });
+
+//     // ✅ Assign completed topics to lessons
+//     completedTopics.forEach(topicId => {
+//       const topic = topicMap[topicId.toString()];
+//       if (topic && lessonMap[topic.lessonId]) {
+//         lessonMap[topic.lessonId].completedTopics.push({
+//           _id: topic._id,
+//           title: topic.title
+//         });
+//       }
+//     });
+
+//     // ✅ Assign completed lessons to modules
+//     uniqueCompletedLessons.forEach(lessonId => {
+//       const lesson = lessonMap[lessonId.toString()];
+//       if (lesson && moduleMap[lesson.moduleId]) {
+//         moduleMap[lesson.moduleId].completedLessons.push({
+//           _id: lesson._id,
+//           title: lesson.title,
+//           completedTopics: lesson.completedTopics
+//         });
+//       }
+//     });
+
+//     // ✅ Prepare completedModules for response
+//     const populatedModules = completedModules.map(moduleId => {
+//       const mod = moduleMap[moduleId.toString()];
+//       if (mod) {
+//         return {
+//           _id: mod._id,
+//           title: mod.title,
+//           description: mod.description,
+//           completedLessons: mod.completedLessons
+//         };
+//       }
+//       return null;
+//     }).filter(Boolean);
+
+//     const responseBatch = batch.toObject();
+//     responseBatch.batchProgress = {
+//       completedModules: populatedModules,
+//       percentage
+//     };
+
+//     res.status(200).json({
+//       message: 'Batch updated successfully',
+//       batch: responseBatch
+//     });
+
+//   } catch (error) {
+//     console.error('Error updating batch:', error);
+//     res.status(500).json({ message: 'Error updating batch', error });
+//   }
+// };
+
+
+
+// exports.updateBatch = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       batchName,
+//       course,
+//       users,
+//       professor,
+//       startDate,
+//       endDate,
+//       quizzes,
+//       events,
+//       completedModules = [],
+//       completedLessons = [],
+//       completedTopics = [],
+//       markAsCompleted = false
+//     } = req.body;
+
+//     let batch = await Batch.findById(id);
+//     if (!batch) {
+//       return res.status(404).json({ message: 'Batch not found' });
+//     }
+
+//     // Update batch fields
+//     batch.batchName = batchName || batch.batchName;
+//     batch.course = course || batch.course;
+//     batch.users = users || batch.users;
+//     batch.professor = professor || batch.professor;
+//     batch.startDate = startDate || batch.startDate;
+//     batch.endDate = endDate || batch.endDate;
+//     batch.quizzes = quizzes || batch.quizzes;
+//     batch.events = events || batch.events;
+
+//     // Progress update
+//     if (!batch.batchProgress) batch.batchProgress = {};
+//     batch.batchProgress.completedModules = completedModules;
+//     batch.batchProgress.completedLessons = completedLessons;
+//     batch.batchProgress.completedTopics = completedTopics;
+
+//     // Get total counts from course to calculate percentage
+//     const courseDoc = await Course.findById(course);
+//     let totalModules = 0, totalLessons = 0, totalTopics = 0;
+
+//     if (courseDoc && courseDoc.modules) {
+//       totalModules = courseDoc.modules.length;
+
+//       courseDoc.modules.forEach(mod => {
+//         if (mod.lessons) {
+//           totalLessons += mod.lessons.length;
+//           mod.lessons.forEach(lesson => {
+//             if (lesson.topics) totalTopics += lesson.topics.length;
+//           });
+//         }
+//       });
+//     }
+
+//     // Count completed
+//     const completedModulesCount = completedModules.length;
+//     const completedLessonsCount = completedLessons.length;
+//     const completedTopicsCount = completedTopics.length;
+
+//     // Safe checks to avoid division by 0
+//     const totalProgressItems = totalModules + totalLessons + totalTopics || 1;
+//     const completedProgressItems = completedModulesCount + completedLessonsCount + completedTopicsCount;
+
+//     const percentage = Math.floor((completedProgressItems / totalProgressItems) * 100);
+//     batch.batchProgress.percentage = percentage;
+
+//     // Handle course completion
+//     if (markAsCompleted && percentage === 100) {
+//       batch.courseCompleted = true;
+//       batch.batchProgress.percentage = 100;
+
+//       // Set inactive date for 15 days after completion
+//       const completionDate = moment().add(15, 'days').toDate();
+//       batch.inactiveDate = completionDate;
+
+//       // Send fancy email to admin
+//       await sendEmail(
+//         ADMIN_EMAIL,
+//         `🎓 Reminder: Generate Certificates for "${batch.batchName}"`,
+//         `<h2 style="color: #4caf50;">Batch "${batch.batchName}" Completed!</h2>
+//          <p>The course <strong>${courseDoc?.title || 'this course'}</strong> has been marked complete.</p>
+//          <p><strong>Professor:</strong> ${batch.professor}</p>
+//          <p><strong>Users:</strong> ${batch.users.length} interns</p>
+//          <p>Please generate the certificates within 15 days to avoid auto-deactivation.</p>`
+//       );
+//     }
+
+//     await batch.save();
+
+//     return res.status(200).json({
+//       message: 'Batch updated successfully',
+//       batch
+//     });
+
+//   } catch (error) {
+//     console.error('❌ Error updating batch:', error);
+//     return res.status(500).json({ message: 'Internal server error', error });
+//   }
+// };
+
+
 exports.updateBatch = async (req, res) => {
   try {
     const { id } = req.params;
@@ -460,155 +813,109 @@ exports.updateBatch = async (req, res) => {
       completedModules = [],
       completedLessons = [],
       completedTopics = [],
-      markAsCompleted = false
+      markAsCompleted
     } = req.body;
 
-    const batch = await Batch.findById(id);
-    if (!batch) return res.status(404).json({ message: 'Batch not found' });
+    let batch = await Batch.findById(id);
+    if (!batch) return res.status(404).json({ message: '❌ Batch not found' });
 
-    const courseDoc = await Course.findById(course || batch.course).lean();
-    if (!courseDoc) return res.status(404).json({ message: 'Course not found' });
-
-    // ✅ Count total lessons across all modules
-    const allLessons = [];
-    courseDoc.modules.forEach(mod => {
-      mod.lessons.forEach(les => {
-        allLessons.push(les._id.toString());
-      });
-    });
-
-    const totalLessons = allLessons.length;
-
-    const completedLessonIds = completedLessons.map(id => id.toString());
-    const uniqueCompletedLessons = [...new Set(completedLessonIds.filter(id => allLessons.includes(id)))];
-
-    const percentage = totalLessons === 0 ? 0 : Math.round((uniqueCompletedLessons.length / totalLessons) * 100);
-
-    // ✅ Update batch fields
+    // Update fields
     batch.batchName = batchName || batch.batchName;
     batch.course = course || batch.course;
     batch.users = users || batch.users;
     batch.professor = professor || batch.professor;
     batch.startDate = startDate || batch.startDate;
     batch.endDate = endDate || batch.endDate;
-    batch.quizzes = quizzes || batch.quizzes;
-    batch.events = events || batch.events;
+    batch.quizzes = quizzes || [];
+    batch.events = events || [];
 
-    batch.batchProgress = {
-      completedModules,
-      completedLessons: uniqueCompletedLessons,
-      completedTopics,
-      percentage
-    };
+    // Initialize progress structure
+    if (!batch.batchProgress) batch.batchProgress = {};
+    batch.batchProgress.completedModules = completedModules;
+    batch.batchProgress.completedLessons = completedLessons;
+    batch.batchProgress.completedTopics = completedTopics;
 
-    // ✅ Mark as completed and send email
-    // ✅ Handle course completion toggle
-    if (markAsCompleted && !batch.courseCompleted) {
-      // ✅ Mark as completed
-      batch.courseCompleted = true;
-      batch.courseCompletedAt = new Date();
+    // Load actual course structure
+    const courseData = await Course.findById(course);
+    if (!courseData) return res.status(404).json({ message: '❌ Course not found' });
 
-      const adminEmail = process.env.ADMIN_EMAIL || ADMIN_EMAIL;
+    // Calculate total modules, lessons, topics
+    const allModuleIds = courseData.modules.map(mod => mod._id.toString());
+    const allLessonIds = [];
+    const allTopicIds = [];
 
-      await sendEmail(
-        adminEmail,
-        `${batch.batchName}`,
-        `${courseDoc.title}`,  // FIXED: using courseDoc, not batch.course
-        `${batch.users.length}`
-      );
-    } else if (!markAsCompleted && batch.courseCompleted) {
-      // ❌ Unmark as completed
-      batch.courseCompleted = false;
-      batch.courseCompletedAt = null;
-    }
-    // ✅ Save the batch
-
-    await batch.save();
-
-    // ✅ Create nested structure response
-    const moduleMap = {};
-    const lessonMap = {};
-    const topicMap = {};
-
-    courseDoc.modules.forEach(mod => {
-      const modId = mod._id.toString();
-      moduleMap[modId] = {
-        _id: mod._id,
-        title: mod.moduleTitle,
-        description: mod.moduleDescription,
-        completedLessons: []
-      };
-
-      mod.lessons.forEach(les => {
-        const lesId = les._id.toString();
-        lessonMap[lesId] = {
-          _id: les._id,
-          title: les.title,
-          moduleId: modId,
-          completedTopics: []
-        };
-
-        les.topics.forEach(top => {
-          topicMap[top._id.toString()] = {
-            _id: top._id,
-            title: top.title,
-            lessonId: lesId
-          };
+    courseData.modules.forEach(mod => {
+      mod.lessons.forEach(lesson => {
+        allLessonIds.push(lesson._id.toString());
+        lesson.topics.forEach(topic => {
+          allTopicIds.push(topic._id.toString());
         });
       });
     });
 
-    // ✅ Assign completed topics to lessons
-    completedTopics.forEach(topicId => {
-      const topic = topicMap[topicId.toString()];
-      if (topic && lessonMap[topic.lessonId]) {
-        lessonMap[topic.lessonId].completedTopics.push({
-          _id: topic._id,
-          title: topic.title
-        });
-      }
-    });
+    const totalModules = allModuleIds.length;
+    const totalLessons = allLessonIds.length;
+    const totalTopics = allTopicIds.length;
 
-    // ✅ Assign completed lessons to modules
-    uniqueCompletedLessons.forEach(lessonId => {
-      const lesson = lessonMap[lessonId.toString()];
-      if (lesson && moduleMap[lesson.moduleId]) {
-        moduleMap[lesson.moduleId].completedLessons.push({
-          _id: lesson._id,
-          title: lesson.title,
-          completedTopics: lesson.completedTopics
-        });
-      }
-    });
+    // Ensure only valid IDs are counted
+    const completedModuleCount = completedModules.filter(id => allModuleIds.includes(id)).length;
+    const completedLessonCount = completedLessons.filter(id => allLessonIds.includes(id)).length;
+    const completedTopicCount = completedTopics.filter(id => allTopicIds.includes(id)).length;
 
-    // ✅ Prepare completedModules for response
-    const populatedModules = completedModules.map(moduleId => {
-      const mod = moduleMap[moduleId.toString()];
-      if (mod) {
-        return {
-          _id: mod._id,
-          title: mod.title,
-          description: mod.description,
-          completedLessons: mod.completedLessons
-        };
-      }
-      return null;
-    }).filter(Boolean);
+    const totalItems = totalModules + totalLessons + totalTopics;
+    const completedItems = completedModuleCount + completedLessonCount + completedTopicCount;
 
-    const responseBatch = batch.toObject();
-    responseBatch.batchProgress = {
-      completedModules: populatedModules,
-      percentage
-    };
+    const percentage = totalItems === 0 ? 0 : Math.floor((completedItems / totalItems) * 100);
+    batch.batchProgress.percentage = percentage;
 
-    res.status(200).json({
-      message: 'Batch updated successfully',
-      batch: responseBatch
+    console.log("✔ Total:", totalItems, "Completed:", completedItems, "→ %:", percentage);
+
+    // Handle markAsCompleted toggle
+    if (typeof markAsCompleted === 'boolean') {
+      batch.courseCompleted = markAsCompleted;
+    }
+
+    // Handle full completion
+    if (markAsCompleted && percentage === 100) {
+      batch.courseCompleted = true;
+      batch.batchProgress.percentage = 100;
+
+      // Set inactive after 15 days
+      const completionDate = moment().add(15, 'days').toDate();
+      batch.inactiveDate = completionDate;
+
+      // Fetch professor details for email
+      const profDoc = await Professor.findById(professor);
+      console.log("✔ Professor:", profDoc);
+
+      // Send reminder email to admin
+      await sendEmail(
+        ADMIN_EMAIL,
+        `🎓 Reminder: Generate Certificates for "${batch.batchName}"`,
+        `<h2 style="color: #4caf50;">Batch "${batch.batchName}" Completed!</h2>
+         <p>The course <strong>${courseData.title}</strong> has been marked complete.</p>
+         <p><strong>Professor:</strong> ${profDoc?.name || 'N/A'}</p>
+         <p><strong>Users:</strong> ${batch.users.length} interns</p>
+         <p>Please generate the certificates within 15 days to avoid auto-deactivation.</p>`
+      );
+    }
+
+    // Save and return
+    await batch.save();
+
+    const populated = await Batch.findById(batch._id)
+      .populate('course', 'title')
+      .populate('users', 'name email')
+      .populate('professor', 'name email');
+
+    return res.status(200).json({
+      message: "✅ Batch updated successfully",
+      batch: populated
     });
 
   } catch (error) {
-    console.error('Error updating batch:', error);
-    res.status(500).json({ message: 'Error updating batch', error });
+    console.error("❌ Error updating batch:", error);
+    return res.status(500).json({ message: '❌ Internal Server Error', error: error.message });
   }
 };
 
@@ -716,11 +1023,79 @@ exports.getBatchStats = async (req, res) => {
 
 
 // Send certificate emails to selected users
+// exports.sendBatchCertificates = async (req, res) => {
+//   try {
+//     const { batchId } = req.body;
+
+//     // Step 1: Get batch, course, and users
+//     const batch = await Batch.findById(batchId).populate('users course');
+//     if (!batch) return res.status(404).json({ message: 'Batch not found' });
+
+//     const { users, course } = batch;
+//     if (!users.length) return res.status(400).json({ message: 'No users in batch' });
+//     if (!course) return res.status(400).json({ message: 'Course not associated with batch' });
+
+//     // Step 2: Loop through users
+//     for (const user of users) {
+//       const certId = generateCertificateId();
+
+//       // Generate PDF Buffer
+//       const pdfBuffer = await generateCertificate({
+//         userName: user.name,
+//         courseTitle: course.title,
+//       });
+
+//       // Save PDF temporarily to disk
+//       const tempFilePath = path.join(__dirname, `../temp/${certId}.pdf`);
+//       fs.writeFileSync(tempFilePath, pdfBuffer);
+
+//       // Upload to Cloudinary
+//       const certUrl = await uploadCertificateToCloudinary(tempFilePath, `${certId}.pdf`);
+
+//       // Save progress update
+//       await Progress.findOneAndUpdate(
+//         { user: user._id, course: course._id },
+//         {
+//           isCompleted: true,
+//           completedAt: new Date(),
+//           certificateUrl: certUrl,
+//           certificateId: certId
+//         },
+//         { new: true, upsert: true }
+//       );
+
+//       // Send fancy email with certificate
+//       await sendCertificateMail({
+//         to: user.email,
+//         name: user.name,
+//         courseTitle: course.title,
+//         certUrl,
+//         certId
+//       });
+//     }
+
+//     // Step 3: Update batch certificate issuance info
+//     batch.certificatesIssued = true;
+//     batch.certificatesIssuedAt = new Date();
+//     await batch.save();
+    
+//     // Step 4: Return success response
+//     return res.status(200).json({
+//       message: `Certificates successfully sent to all ${users.length} users in batch "${batch.batchName}"`,
+//       courseTitle: course.title,
+//     });
+//   } catch (error) {
+//     console.error('Error sending certificates:', error);
+//     return res.status(500).json({ message: 'Error sending certificates', error });
+//   }
+// };
+
+
+
 exports.sendBatchCertificates = async (req, res) => {
   try {
     const { batchId } = req.body;
 
-    // Step 1: Get batch, course, and users
     const batch = await Batch.findById(batchId).populate('users course');
     if (!batch) return res.status(404).json({ message: 'Batch not found' });
 
@@ -728,48 +1103,70 @@ exports.sendBatchCertificates = async (req, res) => {
     if (!users.length) return res.status(400).json({ message: 'No users in batch' });
     if (!course) return res.status(400).json({ message: 'Course not associated with batch' });
 
-    // Step 2: Loop through users
+    const issued = [];
+    const notIssued = [];
+
     for (const user of users) {
-      const certId = generateCertificateId();
+      try {
+        const certId = generateCertificateId();
 
-      // Generate PDF Buffer
-      const pdfBuffer = await generateCertificate({
-        userName: user.name,
-        courseTitle: course.title,
-      });
+        // Generate certificate PDF
+        const pdfBuffer = await generateCertificate({
+          userName: user.name,
+          courseTitle: course.title,
+        });
 
-      // Save PDF temporarily to disk
-      const tempFilePath = path.join(__dirname, `../temp/${certId}.pdf`);
-      fs.writeFileSync(tempFilePath, pdfBuffer);
+        const tempFilePath = path.join(__dirname, `../temp/${certId}.pdf`);
+        fs.writeFileSync(tempFilePath, pdfBuffer);
 
-      // Upload to Cloudinary
-      const certUrl = await uploadCertificateToCloudinary(tempFilePath, `${certId}.pdf`);
+        // Upload to Cloudinary
+        const certUrl = await uploadCertificateToCloudinary(tempFilePath, `${certId}.pdf`);
 
-      // Save progress update
-      await Progress.findOneAndUpdate(
-        { user: user._id, course: course._id },
-        {
-          isCompleted: true,
-          completedAt: new Date(),
-          certificateUrl: certUrl,
-          certificateId: certId
-        },
-        { new: true, upsert: true }
-      );
+        // Save to progress
+        await Progress.findOneAndUpdate(
+          { user: user._id, course: course._id },
+          {
+            isCompleted: true,
+            completedAt: new Date(),
+            certificateUrl: certUrl,
+            certificateId: certId
+          },
+          { new: true, upsert: true }
+        );
 
-      // Send fancy email with certificate
-      await sendCertificateMail({
-        to: user.email,
-        name: user.name,
-        courseTitle: course.title,
-        certUrl,
-        certId
-      });
+        // Send fancy email
+        await sendCertificateMail({
+          to: user.email,
+          name: user.name,
+          courseTitle: course.title,
+          certUrl,
+          certId
+        });
+
+        issued.push({ userId: user._id.toString(), name: user.name, email: user.email });
+
+        // Clean up temporary file only if it exists
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+      } catch (err) {
+        console.error(`❌ Certificate failed for ${user.email}:`, err);
+        notIssued.push({ userId: user._id.toString(), name: user.name, email: user.email });
+      }
     }
 
+    // Update batch fields
+    batch.certificatesIssued = issued.length === users.length;
+    batch.certificatesIssuedAt = new Date();
+    batch.certificatesIssuedTo = issued.map(u => u.userId);
+    await batch.save();
+
     return res.status(200).json({
-      message: `Certificates successfully sent to all ${users.length} users in batch "${batch.batchName}"`,
-      courseTitle: course.title,
+      message: 'Batch certificate process completed.',
+      issuedCount: issued.length,
+      notIssuedCount: notIssued.length,
+      issuedTo: issued,
+      notIssuedTo: notIssued
     });
   } catch (error) {
     console.error('Error sending certificates:', error);
@@ -778,8 +1175,111 @@ exports.sendBatchCertificates = async (req, res) => {
 };
 
 
+// get batch certificate status by batch ID
+exports.getBatchCertificateStatus = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    const batch = await Batch.findById(batchId)
+      .populate('users', 'name email') // get user details
+      .populate('certificatesIssuedTo', 'name email'); // get issuedTo details
+
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found' });
+    }
+
+    const allUsers = batch.users || [];
+    const issuedUsers = batch.certificatesIssuedTo || [];
+
+    // Convert to string for safe comparison
+    const issuedIds = issuedUsers.map(u => u._id.toString());
+
+    // Separate issued and not issued
+    const issuedTo = issuedUsers.map(user => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email
+    }));
+
+    const notIssuedTo = allUsers
+      .filter(user => !issuedIds.includes(user._id.toString()))
+      .map(user => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      }));
+
+    res.status(200).json({
+      message: 'Batch certificate status fetched successfully',
+      totalUsers: allUsers.length,
+      issuedCount: issuedTo.length,
+      notIssuedCount: notIssuedTo.length,
+      issuedTo,
+      notIssuedTo
+    });
+  } catch (error) {
+    console.error('Error fetching batch certificate status:', error);
+    res.status(500).json({
+      message: 'Error fetching batch certificate status',
+      error
+    });
+  }
+};
 
 
+// get all batches certificate status 
+exports.getAllBatchesCertificateStatus = async (req, res) => {
+  try {
+    const batches = await Batch.find()
+      .populate('users', 'name email')
+      .populate('certificatesIssuedTo', 'name email');
+
+    const results = [];
+
+    for (const batch of batches) {
+      const allUsers = batch.users || [];
+      const issuedUsers = batch.certificatesIssuedTo || [];
+
+      const issuedIds = issuedUsers.map(user => user._id.toString());
+
+      const issuedTo = issuedUsers.map(user => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      }));
+
+      const notIssuedTo = allUsers
+        .filter(user => !issuedIds.includes(user._id.toString()))
+        .map(user => ({
+          _id: user._id,
+          name: user.name,
+          email: user.email
+        }));
+
+      results.push({
+        batchId: batch._id,
+        batchName: batch.batchName,
+        totalUsers: allUsers.length,
+        issuedCount: issuedTo.length,
+        notIssuedCount: notIssuedTo.length,
+        issuedTo,
+        notIssuedTo
+      });
+    }
+
+    return res.status(200).json({
+      message: 'All batches certificate status fetched successfully',
+      totalBatches: results.length,
+      data: results
+    });
+  } catch (error) {
+    console.error('Error fetching all batch certificate statuses:', error);
+    return res.status(500).json({
+      message: 'Error fetching all batch certificate statuses',
+      error: error.message || error
+    });
+  }
+};
 
 
 
