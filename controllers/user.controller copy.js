@@ -58,9 +58,8 @@ exports.updateUserStatus = async (req, res) => {
     await user.save();
 
     // ✅ Send approval email only if approved and password exists
-    // console.log('Generated password:', user.generatedPassword, approveStatus);
+    // console.log('Generated password:', user.generatedPassword);
     if (approveStatus === 'approved' && user.generatedPassword) {
-      // console.log('Generated password:', user.generatedPassword, approveStatus);
       // console.log('Generated password:', user.generatedPassword);
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
@@ -190,79 +189,71 @@ exports.getWaitingUsers = async (req, res) => {
   }
 };
 
-// Admin can update any user's profile
 exports.updateUserByAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true
-    });
+    // 🔍 Find user first
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.status(200).json({
-      message: 'User updated successfully by admin',
-      user: updatedUser
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating user by admin', error });
-  }
-};
-
-
-
-// Get own profile
-exports.getOwnProfile = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const user = await User.findById(userId).select('-password -generatedPassword');
-
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    res.status(200).json({ user });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile', error });
-  }
-};
-
-
-// Update own profile (intern-safe)
-exports.updateOwnProfile = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
+    // ✅ Update allowed fields only
     const allowedFields = [
-      'firstName', 'middleName', 'lastName',
-      'profileImage', 'phone', 'resume',
-      'collegeName', 'department', 'university',
-      'degree', 'specialization', 'cgpa', 'currentYear', 'isGraduated', 'yearOfPassing',
-      'hasExperience', 'previousCompany', 'position', 'yearsOfExperience',
-      'employeeAddress'
+      'name', 'email', 'phone', 'college', 'currentYear', 'cgpa',
+      'branch', 'role', 'resume', 'isApproved', 'approveStatus',
+      'courseEnrolled', 'courseProgress'
     ];
 
-    const updates = {};
     allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) updates[field] = req.body[field];
+      if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
     });
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-      runValidators: true
-    });
+    await user.save();
 
-    res.status(200).json({
-      message: 'Profile updated successfully',
-      user: updatedUser
-    });
+    res.status(200).json({ message: "User updated successfully", user });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating profile', error });
+    console.error("Update error:", error);
+    res.status(500).json({
+      message: "Failed to update user",
+      error: error.message || error
+    });
   }
 };
 
 
+
+
+exports.updateOwnProfile = async (req, res) => {
+  try {
+    const userId = req.user._id; // populated by auth middleware
+    const role = req.user.role;
+    const updates = req.body;
+
+    // Define field access based on role
+    const internFields = [
+      'name', 'phone', 'profileImage', 'resume',
+      'collegeName', 'department', 'university',
+      'degree', 'specialization', 'cgpa',
+      'currentYear', 'isGraduated', 'yearOfPassing',
+      'hasExperience', 'previousCompany', 'position', 'yearsOfExperience'
+    ];
+
+    const adminFields = [...internFields, 'email']; // admins can change email too
+
+    const allowedFields = role === 'admin' ? adminFields : internFields;
+
+    const filteredData = {};
+    for (let field of allowedFields) {
+      if (updates[field] !== undefined) {
+        filteredData[field] = updates[field];
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, filteredData, { new: true });
+    res.status(200).json({ message: "Profile updated", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update profile", error });
+  }
+};
