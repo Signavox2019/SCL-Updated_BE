@@ -16,10 +16,8 @@ const initializeSocket = (server) => {
     console.log('🔌 Socket connected:', socket.id);
 
     socket.on('register', ({ userId }) => {
-      if (userId) {
-        connectedUsers.set(userId.toString(), socket.id);
-        console.log(`✅ User registered: ${userId} with socket: ${socket.id}`);
-      }
+      connectedUsers.set(userId, socket.id);
+      console.log(`✅ User registered: ${userId} with socket: ${socket.id}`);
     });
 
     socket.on('disconnect', () => {
@@ -27,7 +25,6 @@ const initializeSocket = (server) => {
       for (const [userId, socketId] of connectedUsers.entries()) {
         if (socketId === socket.id) {
           connectedUsers.delete(userId);
-          console.log(`🧹 User disconnected: ${userId}`);
           break;
         }
       }

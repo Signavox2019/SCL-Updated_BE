@@ -42,6 +42,8 @@ app.use('/api/progress', require('./routes/progress.routes'));                 /
 // app.use('/api/roles', require('./routes/'));                         // Phase 14
 app.use('/api/batches', require('./routes/batch.routes')); 
 app.use('/api/stats', require('./routes/stats.routes')); // Phase 17
+app.use('/api/tickets', require('./routes/ticket.routes'));                     // Phase 18
+
 // Default route
 app.get('/', (req, res) => {
   res.send('🚀 Signavox Career Ladder API is running...');

@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   middleName: { type: String },
   lastName: { type: String, required: true },
-  fullName: { type: String },
+  name: { type: String },
 
   email: { type: String, unique: true, required: true },
   password: { type: String, required: true },
@@ -87,7 +87,7 @@ userSchema.pre('findOneAndUpdate', function (next) {
     const firstName = update.firstName || this._update.firstName;
     const middleName = update.middleName || this._update.middleName;
     const lastName = update.lastName || this._update.lastName;
-    update.fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    update.name = [firstName, middleName, lastName].filter(Boolean).join(' ');
     this.setUpdate(update);
   }
   next();

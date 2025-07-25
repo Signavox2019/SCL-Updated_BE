@@ -29,6 +29,7 @@ router.get('/stats/metrics', protect, allowRoles('admin'), userController.userSt
 
 
 router.put('/admin/update-user/:id', protect, allowRoles('admin'), userController.updateUserByAdmin);
+router.get('/me', protect, userController.getOwnProfile);
 router.put('/me/update-profile', protect, userController.updateOwnProfile);
 
 

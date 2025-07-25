@@ -38,3 +38,11 @@ exports.uploadBanner = multer({
   storage: getStorage('banners'),
   fileFilter: fileFilter(['.jpg', '.jpeg', '.png'])
 });
+
+
+
+// Ticket file upload (support screenshots, images, PDFs, text, etc.)
+exports.uploadTicketFile = multer({
+  storage: getStorage('tickets'),
+  fileFilter: fileFilter(['.jpg', '.jpeg', '.png', '.pdf', '.txt', '.doc', '.docx'])
+});

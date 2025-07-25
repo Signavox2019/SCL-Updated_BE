@@ -5,7 +5,7 @@ const { protect, allowRoles } = require('../middleware/auth.middleware');
 
 
 // Example: GET /api/batches/date-range?startDate=2025-06-01&endDate=2025-07-30
-router.get('/date-range', batchController.getBatchesByDateRange);
+router.get('/date-range', protect, allowRoles('admin'), batchController.getBatchesByDateRange);
 
 
 
