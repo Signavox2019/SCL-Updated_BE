@@ -418,3 +418,56 @@ exports.getMyTicketStats = async (req, res) => {
     });
   }
 };
+
+
+exports.getTicketStatsByMonth = async (req, res) => {
+  try {
+    const { month } = req.query;
+
+    if (!month) {
+      return res.status(400).json({
+        success: false,
+        message: 'month query parameter is required in YYYY-MM format',
+      });
+    }
+
+    const start = moment(month, 'YYYY-MM').startOf('month').toDate();
+    const end = moment(month, 'YYYY-MM').endOf('month').toDate();
+
+    const tickets = await Ticket.find({
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    const monthlyStats = {
+      total: 0,
+      pending: 0,
+      open: 0,
+      solved: 0,
+      closed: 0,
+      breached: 0,
+    };
+
+    tickets.forEach(ticket => {
+      monthlyStats.total += 1;
+
+      const status = ticket.status?.toLowerCase();
+      if (status === 'pending') monthlyStats.pending += 1;
+      else if (status === 'open') monthlyStats.open += 1;
+      else if (status === 'solved') monthlyStats.solved += 1;
+      else if (status === 'closed') monthlyStats.closed += 1;
+      else if (status === 'breached') monthlyStats.breached += 1;
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Ticket stats for ${month} fetched successfully`,
+      data: { [month]: monthlyStats },
+    });
+  } catch (error) {
+    console.error('Error fetching ticket stats by month:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};

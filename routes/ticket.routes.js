@@ -6,6 +6,9 @@ const { protect, authenticate, allowRoles } = require('../middleware/auth.middle
 
 router.get('/stats', protect, ticketController.getTicketStats);
 router.get('/my-ticket-stats', protect, ticketController.getMyTicketStats);
+// routes/ticket.routes.js or similar
+router.get('/stats-by-month', protect, ticketController.getTicketStatsByMonth);
+
 
 
 
