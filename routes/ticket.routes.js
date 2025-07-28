@@ -4,6 +4,9 @@ const ticketController = require('../controllers/ticket.controller');
 const { uploadTicketFile } = require('../middleware/upload.middleware');
 const { protect, authenticate, allowRoles } = require('../middleware/auth.middleware');
 
+router.get('/stats', protect, ticketController.getTicketStats);
+
+
 // Create Ticket (with optional file upload)
 router.post(
   '/',
@@ -29,5 +32,12 @@ router.get('/', protect, ticketController.getAllTickets);
 router.get('/my', protect, ticketController.getMyTickets);
 router.get('/:id', protect, ticketController.getTicketById);
 router.delete('/:id', protect, ticketController.deleteTicket);
+
+router.put(
+  '/:id/update-by-user',
+  protect,
+  uploadTicketFile.single('file'),
+  ticketController.updateTicketByUser
+);
 
 module.exports = router;

@@ -148,14 +148,14 @@ exports.register = async (req, res) => {
     const generatedPassword = crypto.randomBytes(6).toString('hex'); // 12-character
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
-    // Auto-generate fullName
-    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+    // Auto-generate name
+    const name = [firstName, middleName, lastName].filter(Boolean).join(' ');
 
     const user = await User.create({
       firstName,
       middleName,
       lastName,
-      fullName,
+      name,
       email,
       phone,
       role,
@@ -196,7 +196,7 @@ exports.register = async (req, res) => {
       </div>
 
       <div style="margin-top: 20px; color: #333; font-size: 16px;">
-        <p>Hello <strong>${fullName}</strong>,</p>
+        <p>Hello <strong>${name}</strong>,</p>
         <p>Thank you for registering for <strong>Signavox Career Ladder</strong>. We have received your application and it is currently under review.</p>
         <p>Once approved by our admin team, you will receive an email with your login credentials to access the platform.</p>
       </div>

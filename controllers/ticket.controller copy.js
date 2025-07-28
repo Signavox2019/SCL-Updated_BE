@@ -15,9 +15,9 @@ const generateTicketId = async (userFirstName) => {
   return `SCLINT+${padded}+${userFirstName[0].toUpperCase()}`;
 };
 
-// Round-robin support assignment (only approved support users)
+// Round-robin support assignment
 const getSupportUser = async () => {
-  const supportUsers = await User.find({ role: 'support', approveStatus: 'approved' });
+  const supportUsers = await User.find({ role: 'support' });
   if (supportUsers.length === 0) return null;
   const user = supportUsers[supportIndex % supportUsers.length];
   supportIndex++;
@@ -41,11 +41,10 @@ exports.createTicket = async (req, res) => {
 
     const user = req.user; // from token
 
+    // Generate TicketID: SCLINT+001+<FirstLetter>
     const userFirstLetter = user.firstName.charAt(0).toUpperCase();
     const count = await Ticket.countDocuments();
     const ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
-
-    const supportUser = await getSupportUser();
 
     const ticket = new Ticket({
       ticketId,
@@ -53,26 +52,13 @@ exports.createTicket = async (req, res) => {
       description,
       file: file ? file.path : null,
       createdBy: user._id,
-      handledBy: supportUser?._id || null,
-      status: 'Pending',
+      status: 'Open',
       priority: 'Low',
     });
 
     await ticket.save();
 
-    await sendNotification({
-      userId: user._id,
-      title: '🎫 Ticket Created',
-      message: `Your ticket ${ticket.ticketId} has been successfully created.`
-    });
-
-    if (supportUser) {
-      await sendNotification({
-        userId: supportUser._id,
-        title: '📥 New Ticket Assigned',
-        message: `You have been assigned a new ticket ${ticket.ticketId}`
-      });
-    }
+    // TODO: Trigger round-robin assignment + notify support team
 
     res.status(201).json({ message: 'Ticket created', ticket });
   } catch (err) {
@@ -80,6 +66,7 @@ exports.createTicket = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Get all tickets (admin/support)
 exports.getAllTickets = async (req, res) => {
@@ -134,20 +121,27 @@ exports.updateStatus = async (req, res) => {
     const user = ticket.createdBy;
     const handler = ticket.handledBy;
 
+    // Socket notification
+    // sendNotification(user._id, `📢 Your ticket "${ticket.title}" is now marked as *${status.toUpperCase()}*`);
+    // console.log(ticket.createdBy._id);
+    // console.log(ticket.createdBy);
+
+    // sendNotification({
+    //   userId: ticket.createdBy._id,
+    //   title: 'Ticket Status Update',
+    //   message: `Your ticket "${ticket.title}" is now marked as "${ticket.status}".`
+    // });
+
+
     await sendNotification({
-      userId: user._id,
+      userId: ticket.createdBy._id,
       title: 'Ticket Status Updated',
       message: `Your ticket ${ticket.title} (${ticket.ticketId}) status has been updated to ${ticket.status}.`
     });
+    console.log("✅ Notification triggered for ticket:", ticket.ticketId);
 
-    if (handler) {
-      await sendNotification({
-        userId: handler._id,
-        title: 'Ticket Status Changed',
-        message: `The status of ticket ${ticket.ticketId} has been changed to ${ticket.status}.`
-      });
-    }
 
+    // Email notification
     await sendEmail(
       user.email,
       `🎫 Ticket "${ticket.title}" Updated`,
@@ -185,17 +179,7 @@ exports.forwardTicket = async (req, res) => {
 
     await ticket.save();
 
-    await sendNotification({
-      userId: ticket.createdBy._id,
-      title: '🔁 Ticket Forwarded',
-      message: `Your ticket ${ticket.ticketId} has been forwarded to ${supportUser.firstName}`
-    });
-
-    await sendNotification({
-      userId: supportUser._id,
-      title: '📥 New Ticket Assigned',
-      message: `You have been assigned a forwarded ticket ${ticket.ticketId}`
-    });
+    sendNotification(ticket.createdBy._id, `🔁 Ticket "${ticket.title}" was forwarded to ${supportUser.firstName}`);
 
     await sendEmail(
       ticket.createdBy.email,
@@ -218,13 +202,11 @@ exports.forwardTicket = async (req, res) => {
 exports.getTicketStats = async (req, res) => {
   try {
     const total = await Ticket.countDocuments();
-    const pending = await Ticket.countDocuments({ status: 'Pending' });
-    const solved = await Ticket.countDocuments({ status: 'Solved' });
-    const breached = await Ticket.countDocuments({ status: 'Breached' });
-    const closed = await Ticket.countDocuments({ status: 'Closed' });
-    const open = await Ticket.countDocuments({ status: 'Open' });
+    const pending = await Ticket.countDocuments({ status: 'pending' });
+    const solved = await Ticket.countDocuments({ status: 'solved' });
+    const breached = await Ticket.countDocuments({ status: 'breached' });
 
-    res.json({ total, pending, solved, breached, closed, open });
+    res.json({ total, pending, solved, breached });
   } catch (err) {
     console.error('❌ Error fetching ticket stats:', err);
     res.status(500).json({ message: 'Failed to fetch stats' });
@@ -244,12 +226,7 @@ exports.checkTicketBreaches = async () => {
         ticket.status = 'breached';
         await ticket.save();
 
-        await sendNotification({
-          userId: ticket.createdBy._id,
-          title: '⏰ Ticket Breached',
-          message: `Your ticket ${ticket.ticketId} has breached the SLA limit.`
-        });
-
+        sendNotification(ticket.createdBy._id, `⏰ Ticket "${ticket.title}" is now marked as BREACHED`);
         await sendEmail(
           ticket.createdBy.email,
           `🚨 Ticket "${ticket.title}" Breached`,
@@ -265,6 +242,7 @@ exports.checkTicketBreaches = async () => {
   }
 };
 
+
 // Update ticket - title, description, status, etc.
 exports.updateTicket = async (req, res) => {
   try {
@@ -274,6 +252,7 @@ exports.updateTicket = async (req, res) => {
     const ticket = await Ticket.findById(id);
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
+    // Only creator or admin/support can update
     if (
       req.user._id.toString() !== ticket.createdBy.toString() &&
       !['admin', 'support'].includes(req.user.role)
@@ -281,34 +260,23 @@ exports.updateTicket = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized to update ticket' });
     }
 
+    // Apply updates
     Object.assign(ticket, updates);
 
+    // If file update (optional)
     if (req.file) {
       ticket.file = req.file.path;
     }
 
     await ticket.save();
-
-    await sendNotification({
-      userId: ticket.createdBy,
-      title: '🛠 Ticket Updated',
-      message: `Your ticket ${ticket.ticketId} has been updated.`
-    });
-
-    if (ticket.handledBy) {
-      await sendNotification({
-        userId: ticket.handledBy,
-        title: '🔔 Ticket Modified',
-        message: `Ticket ${ticket.ticketId} has been updated.`
-      });
-    }
-
     res.status(200).json({ message: 'Ticket updated successfully', ticket });
   } catch (error) {
     console.error('Error updating ticket:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 
 // Delete ticket - only creator or admin can delete
 exports.deleteTicket = async (req, res) => {
@@ -318,6 +286,7 @@ exports.deleteTicket = async (req, res) => {
     const ticket = await Ticket.findById(id);
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
+    // Allow only the creator or admin
     if (
       req.user._id.toString() !== ticket.createdBy.toString() &&
       req.user.role !== 'admin'
@@ -330,52 +299,5 @@ exports.deleteTicket = async (req, res) => {
   } catch (error) {
     console.error('Error deleting ticket:', error);
     res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-
-exports.updateTicketByUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id; // from auth middleware
-
-    const { title, description } = req.body;
-    let updatedFileUrl;
-
-    // Find the ticket
-    const ticket = await Ticket.findById(id);
-
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Check if the logged-in user is the creator
-    if (ticket.createdBy.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'Unauthorized: You can only update your own ticket' });
-    }
-
-    // Optional: Upload new file if provided
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'scl/tickets',
-      });
-      updatedFileUrl = result.secure_url;
-    }
-
-    // Update fields
-    if (title) ticket.title = title;
-    if (description) ticket.description = description;
-    if (updatedFileUrl) ticket.file = updatedFileUrl;
-
-    await ticket.save();
-
-    res.status(200).json({
-      message: 'Ticket updated successfully',
-      ticket,
-    });
-  } catch (error) {
-    console.error('❌ Error updating ticket by user:', error);
-    res.status(500).json({ message: 'Internal server error' });
   }
 };

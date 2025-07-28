@@ -15,9 +15,9 @@ const generateTicketId = async (userFirstName) => {
   return `SCLINT+${padded}+${userFirstName[0].toUpperCase()}`;
 };
 
-// Round-robin support assignment (only approved support users)
+// Round-robin support assignment
 const getSupportUser = async () => {
-  const supportUsers = await User.find({ role: 'support', approveStatus: 'approved' });
+  const supportUsers = await User.find({ role: 'support' });
   if (supportUsers.length === 0) return null;
   const user = supportUsers[supportIndex % supportUsers.length];
   supportIndex++;
@@ -54,7 +54,7 @@ exports.createTicket = async (req, res) => {
       file: file ? file.path : null,
       createdBy: user._id,
       handledBy: supportUser?._id || null,
-      status: 'Pending',
+      status: 'Open',
       priority: 'Low',
     });
 
@@ -218,13 +218,11 @@ exports.forwardTicket = async (req, res) => {
 exports.getTicketStats = async (req, res) => {
   try {
     const total = await Ticket.countDocuments();
-    const pending = await Ticket.countDocuments({ status: 'Pending' });
-    const solved = await Ticket.countDocuments({ status: 'Solved' });
-    const breached = await Ticket.countDocuments({ status: 'Breached' });
-    const closed = await Ticket.countDocuments({ status: 'Closed' });
-    const open = await Ticket.countDocuments({ status: 'Open' });
+    const pending = await Ticket.countDocuments({ status: 'pending' });
+    const solved = await Ticket.countDocuments({ status: 'solved' });
+    const breached = await Ticket.countDocuments({ status: 'breached' });
 
-    res.json({ total, pending, solved, breached, closed, open });
+    res.json({ total, pending, solved, breached });
   } catch (err) {
     console.error('❌ Error fetching ticket stats:', err);
     res.status(500).json({ message: 'Failed to fetch stats' });
@@ -330,52 +328,5 @@ exports.deleteTicket = async (req, res) => {
   } catch (error) {
     console.error('Error deleting ticket:', error);
     res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-
-exports.updateTicketByUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user._id; // from auth middleware
-
-    const { title, description } = req.body;
-    let updatedFileUrl;
-
-    // Find the ticket
-    const ticket = await Ticket.findById(id);
-
-    if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    // Check if the logged-in user is the creator
-    if (ticket.createdBy.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'Unauthorized: You can only update your own ticket' });
-    }
-
-    // Optional: Upload new file if provided
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'scl/tickets',
-      });
-      updatedFileUrl = result.secure_url;
-    }
-
-    // Update fields
-    if (title) ticket.title = title;
-    if (description) ticket.description = description;
-    if (updatedFileUrl) ticket.file = updatedFileUrl;
-
-    await ticket.save();
-
-    res.status(200).json({
-      message: 'Ticket updated successfully',
-      ticket,
-    });
-  } catch (error) {
-    console.error('❌ Error updating ticket by user:', error);
-    res.status(500).json({ message: 'Internal server error' });
   }
 };
