@@ -379,3 +379,42 @@ exports.updateTicketByUser = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+exports.getMyTicketStats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const tickets = await Ticket.find({ createdBy: userId });
+
+    const stats = {
+      total: tickets.length,
+      pending: 0,
+      open: 0,
+      solved: 0,
+      closed: 0,
+      breached: 0,
+    };
+
+    tickets.forEach(ticket => {
+      const status = ticket.status?.toLowerCase();
+      if (status === 'pending') stats.pending += 1;
+      else if (status === 'open') stats.open += 1;
+      else if (status === 'solved') stats.solved += 1;
+      else if (status === 'closed') stats.closed += 1;
+      else if (status === 'breached') stats.breached += 1;
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User ticket stats fetched successfully",
+      data: stats,
+    });
+  } catch (error) {
+    console.error('Error getting user ticket stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};

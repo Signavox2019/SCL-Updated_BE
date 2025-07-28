@@ -5,6 +5,8 @@ const { uploadTicketFile } = require('../middleware/upload.middleware');
 const { protect, authenticate, allowRoles } = require('../middleware/auth.middleware');
 
 router.get('/stats', protect, ticketController.getTicketStats);
+router.get('/my-ticket-stats', protect, ticketController.getMyTicketStats);
+
 
 
 // Create Ticket (with optional file upload)
