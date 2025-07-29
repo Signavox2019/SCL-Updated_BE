@@ -9,6 +9,8 @@ router.get('/my-ticket-stats', protect, ticketController.getMyTicketStats);
 // routes/ticket.routes.js or similar
 router.get('/stats-by-month', protect, ticketController.getTicketStatsByMonth);
 
+router.get('/my-assigned-tickets', protect,  ticketController.getMyAssignedTickets);
+
 
 
 
@@ -37,6 +39,8 @@ router.get('/', protect, ticketController.getAllTickets);
 router.get('/my', protect, ticketController.getMyTickets);
 router.get('/:id', protect, ticketController.getTicketById);
 router.delete('/:id', protect, ticketController.deleteTicket);
+
+
 
 router.put(
   '/:id/update-by-user',

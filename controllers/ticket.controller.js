@@ -4,6 +4,7 @@ const cloudinary = require('../utils/cloudinary');
 const sendNotification = require('../utils/sendNotification');
 const sendEmail = require('../utils/sendEmail'); // <-- Assumes sendEmail(to, subject, html)
 const moment = require('moment');
+const { getPriorityLevel } = require('../utils/priorityManager');
 
 // Round-robin support assignment
 let supportIndex = 0;
@@ -34,13 +35,14 @@ const calculatePriority = (createdAt) => {
 };
 
 // Create a ticket
+// Controller to create a ticket
 exports.createTicket = async (req, res) => {
   try {
     const { title, description } = req.body;
     const file = req.file;
-    const user = req.user; // from token via middleware
+    const user = req.user; // from token via protect middleware
 
-    // Validate user existence and name
+    // Validate user
     if (!user || !user.firstName) {
       return res.status(400).json({
         success: false,
@@ -48,24 +50,34 @@ exports.createTicket = async (req, res) => {
       });
     }
 
-    // Generate unique Ticket ID
+    // Generate ticket ID
     const userFirstLetter = user.firstName.charAt(0).toUpperCase();
     const count = await Ticket.countDocuments();
     const ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
 
-    // Get support user using round-robin logic
+    // Get support user via round-robin
     const supportUser = await getSupportUser();
 
-    // Create the ticket document
+    // Upload file to Cloudinary (if present)
+    let fileUrl = null;
+    if (file) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'scl/tickets',
+        resource_type: 'auto'
+      });
+      fileUrl = result.secure_url;
+    }
+
+    // Create ticket
     const ticket = new Ticket({
       ticketId,
       title,
       description,
-      file: file ? file.path : null,
+      fileUrl, // Store Cloudinary URL here
       createdBy: user._id,
       handledBy: supportUser?._id || null,
       status: 'Pending',
-      priority: 'Low', // Will be updated if SLA is breached
+      priority: 'Low'
     });
 
     await ticket.save();
@@ -74,22 +86,22 @@ exports.createTicket = async (req, res) => {
     await sendNotification({
       userId: user._id,
       title: '🎫 Ticket Created',
-      message: `Your ticket ${ticket.ticketId} has been successfully created.`,
+      message: `Your ticket ${ticket.ticketId} has been successfully created.`
     });
 
-    // Notify support staff
+    // Notify assigned support staff
     if (supportUser) {
       await sendNotification({
         userId: supportUser._id,
         title: '📥 New Ticket Assigned',
-        message: `You have been assigned a new ticket ${ticket.ticketId}.`,
+        message: `You have been assigned a new ticket ${ticket.ticketId}.`
       });
     }
 
     res.status(201).json({
       success: true,
       message: 'Ticket created successfully',
-      ticket,
+      ticket
     });
 
   } catch (err) {
@@ -97,6 +109,7 @@ exports.createTicket = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while creating ticket',
+      error: err.message
     });
   }
 };
@@ -386,7 +399,9 @@ exports.updateTicketByUser = async (req, res) => {
     // Update fields
     if (title) ticket.title = title;
     if (description) ticket.description = description;
-    if (updatedFileUrl) ticket.file = updatedFileUrl;
+    // if (updatedFileUrl) ticket.file = updatedFileUrl;
+    if (updatedFileUrl) ticket.fileUrl = updatedFileUrl;
+
 
     await ticket.save();
 
@@ -489,5 +504,36 @@ exports.getTicketStatsByMonth = async (req, res) => {
       success: false,
       message: 'Internal server error',
     });
+  }
+};
+
+
+
+exports.getMyAssignedTickets = async (req, res) => {
+  try {
+    const user = req.user; // Populated by protect middleware
+
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Optional: Ensure only support role can access this route
+    if (user.role !== 'support') {
+      return res.status(403).json({ message: 'Access denied: Only support users can view assigned tickets' });
+    }
+
+    const tickets = await Ticket.find({ handledBy: user._id })
+      .populate('createdBy', 'firstName lastName email') // optional: show who created it
+      .sort({ createdAt: -1 }); // newest first
+
+    res.status(200).json({
+      success: true,
+      message: `Tickets assigned to ${user.firstName}`,
+      total: tickets.length,
+      tickets,
+    });
+  } catch (error) {
+    console.error('Error fetching assigned tickets:', error);
+    res.status(500).json({ message: 'Failed to fetch assigned tickets' });
   }
 };
