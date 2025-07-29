@@ -38,15 +38,25 @@ exports.createTicket = async (req, res) => {
   try {
     const { title, description } = req.body;
     const file = req.file;
+    const user = req.user; // from token via middleware
 
-    const user = req.user; // from token
+    // Validate user existence and name
+    if (!user || !user.firstName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user data from token. Please ensure the user is authenticated and has a valid firstName.',
+      });
+    }
 
+    // Generate unique Ticket ID
     const userFirstLetter = user.firstName.charAt(0).toUpperCase();
     const count = await Ticket.countDocuments();
     const ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
 
+    // Get support user using round-robin logic
     const supportUser = await getSupportUser();
 
+    // Create the ticket document
     const ticket = new Ticket({
       ticketId,
       title,
@@ -55,29 +65,39 @@ exports.createTicket = async (req, res) => {
       createdBy: user._id,
       handledBy: supportUser?._id || null,
       status: 'Pending',
-      priority: 'Low',
+      priority: 'Low', // Will be updated if SLA is breached
     });
 
     await ticket.save();
 
+    // Notify creator
     await sendNotification({
       userId: user._id,
       title: '🎫 Ticket Created',
-      message: `Your ticket ${ticket.ticketId} has been successfully created.`
+      message: `Your ticket ${ticket.ticketId} has been successfully created.`,
     });
 
+    // Notify support staff
     if (supportUser) {
       await sendNotification({
         userId: supportUser._id,
         title: '📥 New Ticket Assigned',
-        message: `You have been assigned a new ticket ${ticket.ticketId}`
+        message: `You have been assigned a new ticket ${ticket.ticketId}.`,
       });
     }
 
-    res.status(201).json({ message: 'Ticket created', ticket });
+    res.status(201).json({
+      success: true,
+      message: 'Ticket created successfully',
+      ticket,
+    });
+
   } catch (err) {
     console.error('Error creating ticket:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating ticket',
+    });
   }
 };
 
