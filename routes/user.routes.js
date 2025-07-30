@@ -3,6 +3,9 @@ const router = express.Router();
 const userController = require('../controllers/user.controller');
 const { protect, allowRoles } = require('../middleware/auth.middleware');
 
+router.get('/me', protect, userController.getOwnProfile);
+
+
 router.get('/my-offer-letter', protect, userController.generateMyOfferLetter);
 
 // Get Waiting Users
@@ -30,7 +33,6 @@ router.get('/stats/metrics', protect, allowRoles('admin'), userController.userSt
 
 
 router.put('/admin/update-user/:id', protect, allowRoles('admin'), userController.updateUserByAdmin);
-router.get('/me', protect, userController.getOwnProfile);
 router.put('/me/update-profile', protect, userController.updateOwnProfile);
 
 
