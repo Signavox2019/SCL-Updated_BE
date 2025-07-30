@@ -1,43 +1,46 @@
 const moment = require('moment');
 
-const WORK_START_HOUR = 9;
-const WORK_END_HOUR = 18;
+function calculateWorkingHours(startDate, endDate) {
+  const start = moment(startDate);
+  const end = moment(endDate);
 
-const isWorkingDay = (day) => {
-  const dayOfWeek = day.isoWeekday(); // 1 = Monday, 7 = Sunday
-  return dayOfWeek >= 1 && dayOfWeek <= 5;
-};
-
-const getNextWorkStart = (date) => {
-  let next = moment(date).hour(WORK_START_HOUR).minute(0).second(0);
-  while (!isWorkingDay(next)) {
-    next.add(1, 'day');
+  if (!start.isValid() || !end.isValid()) {
+    throw new Error('Invalid date inputs to calculateWorkingHours');
   }
-  return next;
-};
 
-const calculateWorkingHours = (start, end) => {
-  let totalHours = 0;
+  const startOfWorkDay = 9; // 9 AM
+  const endOfWorkDay = 18; // 6 PM
+
+  let totalMinutes = 0;
+
+  // Iterate day by day
   let current = moment(start);
+  while (current.isSameOrBefore(end, 'minute')) {
+    const day = current.isoWeekday(); // 1 (Monday) to 7 (Sunday)
 
-  while (current.isBefore(end)) {
-    if (isWorkingDay(current)) {
-      const dayStart = moment(current).hour(WORK_START_HOUR).minute(0).second(0);
-      const dayEnd = moment(current).hour(WORK_END_HOUR).minute(0).second(0);
+    if (day >= 1 && day <= 5) {
+      // Weekday
+      let workStart = current.clone().hour(startOfWorkDay).minute(0).second(0);
+      let workEnd = current.clone().hour(endOfWorkDay).minute(0).second(0);
 
-      const rangeStart = moment.max(dayStart, current);
-      const rangeEnd = moment.min(dayEnd, end);
+      if (current.isAfter(workEnd)) {
+        // Outside working hours
+        current.add(1, 'day').startOf('day');
+        continue;
+      }
 
-      if (rangeStart.isBefore(rangeEnd)) {
-        totalHours += rangeEnd.diff(rangeStart, 'hours', true); // count partial hours
+      let effectiveStart = moment.max(current, workStart);
+      let effectiveEnd = moment.min(end, workEnd);
+
+      if (effectiveEnd.isAfter(effectiveStart)) {
+        totalMinutes += effectiveEnd.diff(effectiveStart, 'minutes');
       }
     }
+
     current.add(1, 'day').startOf('day');
   }
 
-  return totalHours;
-};
+  return totalMinutes / 60; // return hours
+}
 
-module.exports = {
-  calculateWorkingHours,
-};
+module.exports = calculateWorkingHours;

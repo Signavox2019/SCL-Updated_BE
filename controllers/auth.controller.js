@@ -115,6 +115,7 @@ const transporter = nodemailer.createTransport({
 exports.register = async (req, res) => {
   try {
     const {
+      // Personal Details
       firstName,
       middleName,
       lastName,
@@ -138,19 +139,32 @@ exports.register = async (req, res) => {
       hasExperience,
       previousCompany,
       position,
-      yearsOfExperience
+      yearsOfExperience,
+
+      // Organization & Employment Details
+      organizationName,
+      offerLetter,
+      placeOfWork,
+      reportingDate,
+      shiftTimings,         // Example: { start: "09:00", end: "17:00" }
+      workingDays,          // Example: ["Monday", "Tuesday", "Wednesday"]
+      hrName,
+      employeeAddress,
+      stipend
     } = req.body;
 
+    // Check if user already exists
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "User already exists" });
 
-    // Generate secure password
+    // Generate password and hash
     const generatedPassword = crypto.randomBytes(6).toString('hex'); // 12-character
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
-    // Auto-generate name
+    // Generate full name
     const name = [firstName, middleName, lastName].filter(Boolean).join(' ');
 
+    // Create new user
     const user = await User.create({
       firstName,
       middleName,
@@ -163,6 +177,7 @@ exports.register = async (req, res) => {
       generatedPassword,
       profilePhoto,
 
+      // Education
       collegeName,
       department,
       university,
@@ -173,13 +188,25 @@ exports.register = async (req, res) => {
       isGraduated,
       yearOfPassing,
 
+      // Experience
       hasExperience,
       previousCompany,
       position,
       yearsOfExperience,
 
-      approveStatus: 'waiting', // Default
-      certificates: [], // Default empty
+      // Organization
+      organizationName,
+      offerLetter,
+      placeOfWork,
+      reportingDate,
+      shiftTimings,
+      workingDays,
+      hrName,
+      employeeAddress,
+      stipend,
+
+      approveStatus: 'waiting',
+      certificates: [],
     });
 
     // Send confirmation email
@@ -217,12 +244,131 @@ exports.register = async (req, res) => {
       `
     });
 
-    res.status(201).json({ message: "Registration successful. Awaiting admin approval.", user });
+    res.status(201).json({
+      message: "Registration successful. Awaiting admin approval.",
+      user,
+    });
+
   } catch (error) {
     console.error("Registration Error:", error);
     res.status(500).json({ message: "Registration failed", error });
   }
 };
+
+
+
+// exports.register = async (req, res) => {
+//   try {
+//     const {
+//       firstName,
+//       middleName,
+//       lastName,
+//       email,
+//       phone,
+//       role = 'intern',
+//       profilePhoto,
+
+//       // Education Info
+//       collegeName,
+//       department,
+//       university,
+//       degree,
+//       specialization,
+//       cgpa,
+//       currentYear,
+//       isGraduated,
+//       yearOfPassing,
+
+//       // Work Experience
+//       hasExperience,
+//       previousCompany,
+//       position,
+//       yearsOfExperience,
+
+//     } = req.body;
+
+//     const existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ message: "User already exists" });
+
+//     // Generate secure password
+//     const generatedPassword = crypto.randomBytes(6).toString('hex'); // 12-character
+//     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+
+//     // Auto-generate name
+//     const name = [firstName, middleName, lastName].filter(Boolean).join(' ');
+
+//     const user = await User.create({
+//       firstName,
+//       middleName,
+//       lastName,
+//       name,
+//       email,
+//       phone,
+//       role,
+//       password: hashedPassword,
+//       generatedPassword,
+//       profilePhoto,
+
+//       collegeName,
+//       department,
+//       university,
+//       degree,
+//       specialization,
+//       cgpa,
+//       currentYear,
+//       isGraduated,
+//       yearOfPassing,
+
+//       hasExperience,
+//       previousCompany,
+//       position,
+//       yearsOfExperience,
+
+//       approveStatus: 'waiting', // Default
+//       certificates: [], // Default empty
+//     });
+
+//     // Send confirmation email
+//     await transporter.sendMail({
+//       from: process.env.EMAIL_USER,
+//       to: email,
+//       subject: "📩 Registration Received | Signavox Career Ladder",
+//       html: `
+//   <div style="font-family: 'Segoe UI', sans-serif; background-color: #f9f9f9; padding: 40px;">
+//     <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 30px;">
+//       <div style="text-align: center;">
+//         <img src="https://i.imgur.com/DPnG0wq.png" alt="Signavox Logo" style="width: 90px; margin-bottom: 20px;" />
+//         <h2 style="color: #2E86DE;">Registration Received</h2>
+//       </div>
+
+//       <div style="margin-top: 20px; color: #333; font-size: 16px;">
+//         <p>Hello <strong>${name}</strong>,</p>
+//         <p>Thank you for registering for <strong>Signavox Career Ladder</strong>. We have received your application and it is currently under review.</p>
+//         <p>Once approved by our admin team, you will receive an email with your login credentials to access the platform.</p>
+//       </div>
+
+//       <div style="margin-top: 30px; text-align: center;">
+//         <img src="https://i.imgur.com/6LZ5XwQ.png" alt="Pending Review" style="width: 100%; max-width: 300px;" />
+//       </div>
+
+//       <div style="margin-top: 30px; font-size: 14px; color: #666;">
+//         <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support@signavoxtechnologies.com" style="color: #2E86DE;">support@signavoxtechnologies.com</a> for any queries.</p>
+//       </div>
+
+//       <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #aaa;">
+//         <p>&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
+//       </div>
+//     </div>
+//   </div>
+//       `
+//     });
+
+//     res.status(201).json({ message: "Registration successful. Awaiting admin approval.", user });
+//   } catch (error) {
+//     console.error("Registration Error:", error);
+//     res.status(500).json({ message: "Registration failed", error });
+//   }
+// };
 
 
 

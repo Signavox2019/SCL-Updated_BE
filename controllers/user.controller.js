@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Professor = require('../models/Professor');
-
+const { generateAndUploadOfferLetter  } = require('../utils/generateAndUploadOfferLetter');
 const nodemailer = require('nodemailer');
 
 // Nodemailer transporter setup (make sure you’ve already done this)
@@ -278,5 +278,29 @@ exports.getOwnProfile = async (req, res) => {
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching profile', error });
+  }
+};
+
+
+
+
+exports.generateMyOfferLetter = async (req, res) => {
+  try {
+    const user = req.user; // from token (auth middleware)
+
+    const offerLetterUrl = await generateAndUploadOfferLetter(user);
+
+    // Save URL in user schema
+    await User.findByIdAndUpdate(user._id, {
+      offerLetter: offerLetterUrl,
+    });
+
+    res.status(200).json({
+      message: 'Offer letter generated and uploaded successfully.',
+      url: offerLetterUrl,
+    });
+  } catch (error) {
+    console.error('Offer Letter Error:', error);
+    res.status(500).json({ message: 'Failed to generate offer letter.' });
   }
 };

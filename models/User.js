@@ -23,18 +23,23 @@ const userSchema = new mongoose.Schema({
   resume: String,
 
   // Organization Details
-  organizationName: { type: String, default: 'Signavox' },
+  organizationName: { type: String, default: 'Signavox Technologies' },
   offerLetter: { type: String },
-  placeOfWork: { type: String },
+  placeOfWork: { type: String, default: 'Signavox Technologies' },
   reportingDate: { type: Date },
   shiftTimings: {
     start: { type: String },
-    end: { type: String }
+    end: { type: String },
+    default: { type: String, default: '9:30 AM - 6:30 PM' }
   },
-  workingDays: [{ type: String }],
-  hrName: { type: String },
+  // workingDays: [{ type: String }],
+   workingDays: {
+    type: [String],
+    default: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  },
+  hrName: { type: String, default: 'HR Manager' },
   employeeAddress: { type: String },
-  stipend: { type: String },
+  stipend: { type: String, default: '₹ 7,000' },
 
   // Course Payment & Registration
   courseRegisteredFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
