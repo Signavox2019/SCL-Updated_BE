@@ -1,14 +1,20 @@
 const User = require('../models/User');
 const Professor = require('../models/Professor');
-const { generateAndUploadOfferLetter  } = require('../utils/generateAndUploadOfferLetter');
+const { generateAndUploadOfferLetter } = require('../utils/generateAndUploadOfferLetter');
 const nodemailer = require('nodemailer');
 
 // Nodemailer transporter setup (make sure you’ve already done this)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.MAIL_HOST,           // smtp.office365.com
+  port: parseInt(process.env.MAIL_PORT), // 587
+  secure: process.env.MAIL_SECURE === 'true' ? true : false, // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false // optional but may help for dev
   }
 });
 
@@ -67,33 +73,48 @@ exports.updateUserStatus = async (req, res) => {
         to: user.email,
         subject: "🎉 You're Approved! | Signavox Career Ladder",
         html: `
-          <div style="font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; padding: 30px;">
-            <div style="max-width: 600px; margin: auto; background-color: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 30px;">
+        <div style="font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 40px;">
+          <div style="max-width: 620px; margin: auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); overflow: hidden;">
+            
+            <!-- Header Banner -->
+            <div style="background-color: #ffffff;">
+              <img src="https://res.cloudinary.com/dse4pdvw5/image/upload/v1753878636/MacBook_Air_-_1_1_1_dcjrnt.png" alt="Signavox Banner" style="width: 100%; max-height: 180px; object-fit: cover; display: block;" />
+            </div>
+
+            <!-- Body Content -->
+            <div style="padding: 32px;">
               <div style="text-align: center;">
-                <img src="https://i.imgur.com/DPnG0wq.png" alt="Signavox Logo" style="width: 100px; margin-bottom: 20px;" />
-                <h2 style="color: #2E86DE;">Welcome to Signavox Career Ladder 🎓</h2>
-                <p style="font-size: 16px; color: #555;">Hello <strong>${user.name}</strong>,</p>
-                <p style="font-size: 16px; color: #333;">Your account has been <strong style="color: green;">approved</strong> by the admin. You can now access your learning dashboard and begin your journey!</p>
+                <h2 style="color: #2E86DE; margin-bottom: 10px;">Welcome to Signavox Career Ladder 🎓</h2>
+                <p style="font-size: 16px; color: #333333; margin: 8px 0;">Hi <strong>${user.name}</strong>,</p>
+                <p style="font-size: 16px; color: #444444;">We’re thrilled to have you onboard! Your account has been <span style="color: green; font-weight: bold;">approved</span> and you're now ready to dive into your learning experience.</p>
               </div>
-              <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
-              <div style="font-size: 16px; color: #444;">
-                <p><strong>Login Credentials:</strong></p>
-                <ul style="list-style: none; padding-left: 0;">
-                  <li><strong>Email:</strong> ${user.email}</li>
-                  <li><strong>Password:</strong> ${user.generatedPassword}</li>
-                </ul>
-                <p style="margin-top: 20px;">For security reasons, please change your password after first login.</p>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://scl.signavoxtechnologies.com" style="background-color: #2E86DE; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold;">🚀 Go to Dashboard</a>
+
+              <div style="margin-top: 28px;">
+                <p style="font-size: 15px; font-weight: 600; color: #333;">🔐 Your Login Credentials:</p>
+                <div style="background-color: #f0f4f8; padding: 16px 20px; border-radius: 8px; margin-top: 10px;">
+                  <p style="margin: 6px 0;"><strong>Email:</strong> ${user.email}</p>
+                  <p style="margin: 6px 0;"><strong>Password:</strong> ${user.generatedPassword}</p>
                 </div>
+                <p style="font-size: 14px; color: #666; margin-top: 12px;">⚠️ Please change your password after your first login for security.</p>
               </div>
-              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-              <div style="font-size: 14px; color: #999; text-align: center;">
-                <p>If you have any questions, contact us at <a href="mailto:support@signavoxtechnologies.com" style="color: #2E86DE;">support@signavoxtechnologies.com</a></p>
-                <p>&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 36px 0 24px;">
+                <a href="https://scl.signavoxtechnologies.com" style="background-color: #2E86DE; color: white; padding: 14px 28px; border-radius: 10px; font-size: 16px; font-weight: bold; text-decoration: none; display: inline-block;">🚀 Go to Dashboard</a>
+              </div>
+
+              <!-- Divider -->
+              <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 32px 0;">
+
+              <!-- Footer -->
+              <div style="font-size: 13px; color: #999999; text-align: center;">
+                <p>Need help? Reach out at <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE;">support.scl@signavoxtechnologies.com</a></p>
+                <p style="margin-top: 6px;">&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
               </div>
             </div>
           </div>
+        </div>
+
         `
       });
 

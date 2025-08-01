@@ -934,81 +934,265 @@ exports.deleteBatch = async (req, res) => {
   }
 };
 
+// exports.getBatchStats = async (req, res) => {
+//   try {
+//     const [total, active, completed, allBatches] = await Promise.all([
+//       Batch.countDocuments(),
+//       Batch.countDocuments({ isActive: true }),
+//       Batch.countDocuments({ courseCompleted: true }),
+//       Batch.find({})
+//         .populate("users", "name email role")
+//         .populate("course", "title")
+//         .populate("professor", "name")
+//         .lean()
+//     ]);
+
+//     // ✅ Graph Data: Batches Created per Month
+//     const creationGraph = {};
+//     allBatches.forEach(batch => {
+//       const createdAt = moment(batch.createdAt).format("YYYY-MM");
+//       creationGraph[createdAt] = (creationGraph[createdAt] || 0) + 1;
+//     });
+
+//     // ✅ Graph Data: Completed Batches per Month
+//     const completedGraph = {};
+//     allBatches.forEach(batch => {
+//       if (batch.courseCompletedAt) {
+//         const completedMonth = moment(batch.courseCompletedAt).format("YYYY-MM");
+//         completedGraph[completedMonth] = (completedGraph[completedMonth] || 0) + 1;
+//       }
+//     });
+
+//     // ✅ Top 5 Batches by User Count
+//     const topBatches = [...allBatches]
+//       .sort((a, b) => b.users.length - a.users.length)
+//       .slice(0, 5)
+//       .map(batch => ({
+//         batchName: batch.batchName,
+//         courseTitle: batch.course?.title || "N/A",
+//         userCount: batch.users.length,
+//         progress: batch.batchProgress?.percentage || 0
+//       }));
+
+//     // ✅ Detailed Batch Info
+//     const detailedBatches = allBatches.map(batch => ({
+//       id: batch._id,
+//       batchName: batch.batchName,
+//       course: batch.course?.title || "N/A",
+//       professor: batch.professor?.name || "N/A",
+//       users: batch.users.map(u => ({ name: u.name, email: u.email, role: u.role })),
+//       startDate: batch.startDate,
+//       endDate: batch.endDate,
+//       isActive: batch.isActive,
+//       courseCompleted: batch.courseCompleted,
+//       percentage: batch.batchProgress?.percentage || 0
+//     }));
+
+//     res.status(200).json({
+//       summary: {
+//         totalBatches: total,
+//         activeBatches: active,
+//         completedBatches: completed
+//       },
+//       graphData: {
+//         batchesCreatedMonthly: creationGraph,
+//         batchesCompletedMonthly: completedGraph
+//       },
+//       topBatches,
+//       detailedBatches
+//     });
+//   } catch (error) {
+//     console.error("Error fetching batch stats:", error);
+//     res.status(500).json({ message: "Error fetching batch stats", error });
+//   }
+// };
+
+
+// exports.getBatchStats = async (req, res) => {
+//   try {
+//     const batches = await Batch.find()
+//       .populate('course', 'title')
+//       .populate('professor', 'name')
+//       .populate('users', 'name email role');
+
+//     const now = moment();
+//     const summary = {
+//       totalBatches: batches.length,
+//       activeBatches: batches.filter(b => b.isActive).length,
+//       completedBatches: batches.filter(b => b.courseCompleted).length,
+//     };
+
+//     const batchesCreatedMonthly = {};
+//     const batchesCompletedMonthly = {};
+
+//     const topBatches = [];
+//     const detailedBatches = [];
+
+//     for (const batch of batches) {
+//       const createdMonth = moment(batch.createdAt).format('YYYY-MM');
+//       batchesCreatedMonthly[createdMonth] = (batchesCreatedMonthly[createdMonth] || 0) + 1;
+
+//       if (batch.courseCompleted) {
+//         const completedMonth = moment(batch.updatedAt).format('YYYY-MM');
+//         batchesCompletedMonthly[completedMonth] = (batchesCompletedMonthly[completedMonth] || 0) + 1;
+//       }
+
+//       // Progress percentage (fallback to 0 if not present)
+//       const progress = batch.percentage || 0;
+
+//       // Add to topBatches
+//       topBatches.push({
+//         batchName: batch.batchName,
+//         courseTitle: batch.course?.title || '',
+//         userCount: batch.users.length,
+//         progress,
+//       });
+
+//       // Add to detailedBatches
+//       detailedBatches.push({
+//         id: batch._id,
+//         batchName: batch.batchName,
+//         course: batch.course?.title || '',
+//         professor: batch.professor?.name || '',
+//         users: batch.users.map(u => ({
+//           name: u.name,
+//           email: u.email,
+//           role: u.role,
+//         })),
+//         startDate: batch.startDate,
+//         endDate: batch.endDate,
+//         isActive: batch.isActive,
+//         courseCompleted: batch.courseCompleted,
+//         percentage: progress,
+//       });
+//     }
+
+//     // Sort topBatches by progress descending
+//     topBatches.sort((a, b) => b.progress - a.progress);
+
+//     res.json({
+//       summary,
+//       graphData: {
+//         batchesCreatedMonthly,
+//         batchesCompletedMonthly,
+//       },
+//       topBatches,
+//       detailedBatches,
+//     });
+
+//   } catch (error) {
+//     console.error('Error getting batch dashboard data:', error);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// };
+
+
+
 exports.getBatchStats = async (req, res) => {
   try {
-    const [total, active, completed, allBatches] = await Promise.all([
-      Batch.countDocuments(),
-      Batch.countDocuments({ isActive: true }),
-      Batch.countDocuments({ courseCompleted: true }),
-      Batch.find({})
-        .populate("users", "name email role")
-        .populate("course", "title")
-        .populate("professor", "name")
-        .lean()
-    ]);
+    const batches = await Batch.find()
+      .populate({
+        path: 'course',
+        populate: {
+          path: 'modules',
+          populate: {
+            path: 'lessons',
+            populate: {
+              path: 'topics',
+            },
+          },
+        },
+      })
+      .populate('professor', 'name')
+      .populate('users', 'name email role');
 
-    // ✅ Graph Data: Batches Created per Month
-    const creationGraph = {};
-    allBatches.forEach(batch => {
-      const createdAt = moment(batch.createdAt).format("YYYY-MM");
-      creationGraph[createdAt] = (creationGraph[createdAt] || 0) + 1;
-    });
+    const now = moment();
+    const summary = {
+      totalBatches: batches.length,
+      activeBatches: batches.filter(b => b.isActive).length,
+      completedBatches: batches.filter(b => b.courseCompleted).length,
+    };
 
-    // ✅ Graph Data: Completed Batches per Month
-    const completedGraph = {};
-    allBatches.forEach(batch => {
-      if (batch.courseCompletedAt) {
-        const completedMonth = moment(batch.courseCompletedAt).format("YYYY-MM");
-        completedGraph[completedMonth] = (completedGraph[completedMonth] || 0) + 1;
+    const batchesCreatedMonthly = {};
+    const batchesCompletedMonthly = {};
+
+    const topBatches = [];
+    const detailedBatches = [];
+
+    for (const batch of batches) {
+      const createdMonth = moment(batch.createdAt).format('YYYY-MM');
+      batchesCreatedMonthly[createdMonth] = (batchesCreatedMonthly[createdMonth] || 0) + 1;
+
+      if (batch.courseCompleted) {
+        const completedMonth = moment(batch.updatedAt).format('YYYY-MM');
+        batchesCompletedMonthly[completedMonth] = (batchesCompletedMonthly[completedMonth] || 0) + 1;
       }
-    });
 
-    // ✅ Top 5 Batches by User Count
-    const topBatches = [...allBatches]
-      .sort((a, b) => b.users.length - a.users.length)
-      .slice(0, 5)
-      .map(batch => ({
+      // --- 🧠 Calculate Dynamic Percentage ---
+      let totalLessons = 0;
+      const allLessonIds = [];
+
+      if (batch.course?.modules) {
+        batch.course.modules.forEach(module => {
+          module.lessons.forEach(lesson => {
+            totalLessons++;
+            allLessonIds.push(lesson._id.toString());
+          });
+        });
+      }
+
+      const completedLessons = (batch.batchProgress?.completedLessons || []).map(id => id.toString());
+      const uniqueCompletedLessons = [...new Set(completedLessons.filter(id => allLessonIds.includes(id)))];
+
+      const percentage = totalLessons > 0
+        ? Math.round((uniqueCompletedLessons.length / totalLessons) * 100)
+        : 0;
+
+      // --- 📊 Add to Aggregates ---
+      topBatches.push({
         batchName: batch.batchName,
-        courseTitle: batch.course?.title || "N/A",
+        courseTitle: batch.course?.title || '',
         userCount: batch.users.length,
-        progress: batch.batchProgress?.percentage || 0
-      }));
+        progress: percentage,
+      });
 
-    // ✅ Detailed Batch Info
-    const detailedBatches = allBatches.map(batch => ({
-      id: batch._id,
-      batchName: batch.batchName,
-      course: batch.course?.title || "N/A",
-      professor: batch.professor?.name || "N/A",
-      users: batch.users.map(u => ({ name: u.name, email: u.email, role: u.role })),
-      startDate: batch.startDate,
-      endDate: batch.endDate,
-      isActive: batch.isActive,
-      courseCompleted: batch.courseCompleted,
-      percentage: batch.batchProgress?.percentage || 0
-    }));
+      detailedBatches.push({
+        id: batch._id,
+        batchName: batch.batchName,
+        course: batch.course?.title || '',
+        professor: batch.professor?.name || '',
+        users: batch.users.map(u => ({
+          name: u.name,
+          email: u.email,
+          role: u.role,
+        })),
+        startDate: batch.startDate,
+        endDate: batch.endDate,
+        isActive: batch.isActive,
+        courseCompleted: batch.courseCompleted,
+        percentage: percentage,
+      });
+    }
 
-    res.status(200).json({
-      summary: {
-        totalBatches: total,
-        activeBatches: active,
-        completedBatches: completed
-      },
+    // Sort top batches by progress descending
+    topBatches.sort((a, b) => b.progress - a.progress);
+
+    // Respond with full dashboard data
+    res.json({
+      summary,
       graphData: {
-        batchesCreatedMonthly: creationGraph,
-        batchesCompletedMonthly: completedGraph
+        batchesCreatedMonthly,
+        batchesCompletedMonthly,
       },
       topBatches,
-      detailedBatches
+      detailedBatches,
     });
+
   } catch (error) {
-    console.error("Error fetching batch stats:", error);
-    res.status(500).json({ message: "Error fetching batch stats", error });
+    console.error('Error getting batch dashboard data:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
-
-
-
 
 
 

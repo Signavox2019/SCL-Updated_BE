@@ -1,11 +1,17 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.MAIL_HOST,           // smtp.office365.com
+  port: parseInt(process.env.MAIL_PORT), // 587
+  secure: process.env.MAIL_SECURE === 'true' ? true : false, // STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false // optional but may help for dev
+  }
 });
 
 const sendCertificateMail = async (to, name, courseTitle, certUrl) => {

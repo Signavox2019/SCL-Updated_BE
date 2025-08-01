@@ -13,10 +13,16 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
 // ✅ Mailer setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.MAIL_HOST,           // smtp.office365.com
+  port: parseInt(process.env.MAIL_PORT), // 587
+  secure: process.env.MAIL_SECURE === 'true' ? true : false, // STARTTLS
   auth: {
-    user: process.env.EMAIL_USER, // defined in .env
-    pass: process.env.EMAIL_PASS
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    ciphers: 'SSLv3',
+    rejectUnauthorized: false // optional but may help for dev
   }
 });
 
@@ -91,7 +97,7 @@ const transporter = nodemailer.createTransport({
 //       </div>
 
 //       <div style="margin-top: 30px; font-size: 14px; color: #666;">
-//         <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support@signavoxtechnologies.com" style="color: #2E86DE;">support@signavoxtechnologies.com</a> for any queries.</p>
+//         <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE;">support.scl@signavoxtechnologies.com</a> for any queries.</p>
 //       </div>
 
 //       <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #aaa;">
@@ -150,7 +156,12 @@ exports.register = async (req, res) => {
       workingDays,          // Example: ["Monday", "Tuesday", "Wednesday"]
       hrName,
       employeeAddress,
-      stipend
+      stipend,
+      amount = {
+        courseAmount: 0,
+        paidAmount: 0,
+        balanceAmount: 0
+      }
     } = req.body;
 
     // Check if user already exists
@@ -207,6 +218,12 @@ exports.register = async (req, res) => {
 
       approveStatus: 'waiting',
       certificates: [],
+      // courseRegisteredFor: null, // Initially null
+      amount: {
+        courseAmount: amount.courseAmount || 0,
+        paidAmount: amount.paidAmount || 0,
+        balanceAmount: amount.balanceAmount || 0
+      }
     });
 
     // Send confirmation email
@@ -215,32 +232,47 @@ exports.register = async (req, res) => {
       to: email,
       subject: "📩 Registration Received | Signavox Career Ladder",
       html: `
-  <div style="font-family: 'Segoe UI', sans-serif; background-color: #f9f9f9; padding: 40px;">
-    <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 30px;">
-      <div style="text-align: center;">
-        <img src="https://i.imgur.com/DPnG0wq.png" alt="Signavox Logo" style="width: 90px; margin-bottom: 20px;" />
-        <h2 style="color: #2E86DE;">Registration Received</h2>
-      </div>
+<div style="font-family: 'Segoe UI', sans-serif; background-color: #f2f4f8; padding: 0; margin: 0;">
+  <!-- Header Banner -->
+  <div style="width: 100%; background-color: #ffffff;">
+    <img src="https://res.cloudinary.com/dse4pdvw5/image/upload/v1753878636/MacBook_Air_-_1_1_1_dcjrnt.png" alt="Signavox Banner" style="width: 100%; max-height: 180px; object-fit: cover; display: block;" />
+  </div>
 
-      <div style="margin-top: 20px; color: #333; font-size: 16px;">
-        <p>Hello <strong>${name}</strong>,</p>
-        <p>Thank you for registering for <strong>Signavox Career Ladder</strong>. We have received your application and it is currently under review.</p>
-        <p>Once approved by our admin team, you will receive an email with your login credentials to access the platform.</p>
-      </div>
+  <!-- Card Container -->
+  <div style="max-width: 640px; margin: -50px auto 0; background-color: #ffffff; border-radius: 16px; box-shadow: 0 12px 24px rgba(0,0,0,0.08); padding: 40px 30px; position: relative; z-index: 10;">
+    
+    <!-- Greeting & Title -->
+    <div style="text-align: center;">
+      <h2 style="color: #2E86DE; font-size: 24px; margin-bottom: 10px;">Welcome to Signavox Career Ladder</h2>
+      <p style="color: #555; font-size: 16px; line-height: 1.6;">Hi <strong>${name}</strong>, we're thrilled to have you on board!</p>
+    </div>
 
-      <div style="margin-top: 30px; text-align: center;">
-        <img src="https://i.imgur.com/6LZ5XwQ.png" alt="Pending Review" style="width: 100%; max-width: 300px;" />
-      </div>
+    <!-- Body -->
+    <div style="margin-top: 30px; color: #333; font-size: 15px; line-height: 1.7;">
+      <p>Thank you for registering with <strong>Signavox Career Ladder</strong>, our flagship learning platform tailored to empower aspiring professionals like you.</p>
+      <p>Your application has been received and is currently under review by our admin team.</p>
+      <p>Once approved, you'll receive an email with your login credentials to access exclusive learning paths, real-time events, and certification programs.</p>
+    </div>
 
-      <div style="margin-top: 30px; font-size: 14px; color: #666;">
-        <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support@signavoxtechnologies.com" style="color: #2E86DE;">support@signavoxtechnologies.com</a> for any queries.</p>
-      </div>
+    <!-- CTA Button -->
+    <div style="text-align: center; margin-top: 35px;">
+      <a href="https://signavoxtechnologies.com" style="background-color: #2E86DE; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Visit Our Website</a>
+    </div>
 
-      <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #aaa;">
-        <p>&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
-      </div>
+    <!-- Contact Info -->
+    <div style="margin-top: 40px; font-size: 13px; color: #777; text-align: center;">
+      <p>Need help? Reach out to us at <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE;">support.scl@signavoxtechnologies.com</a></p>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 20px;">
+      <p>&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
     </div>
   </div>
+
+  <!-- Spacer -->
+</div>
+
       `
     });
 
@@ -352,7 +384,7 @@ exports.register = async (req, res) => {
 //       </div>
 
 //       <div style="margin-top: 30px; font-size: 14px; color: #666;">
-//         <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support@signavoxtechnologies.com" style="color: #2E86DE;">support@signavoxtechnologies.com</a> for any queries.</p>
+//         <p>In the meantime, feel free to explore our <a href="https://signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">website</a> or contact us at <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE;">support.scl@signavoxtechnologies.com</a> for any queries.</p>
 //       </div>
 
 //       <div style="margin-top: 40px; text-align: center; font-size: 13px; color: #aaa;">
