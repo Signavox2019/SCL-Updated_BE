@@ -49,8 +49,8 @@ const uploadCertificateToS3 = async (localFilePath, fileName) => {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: `certificates/${fileName}`, // S3 path
       Body: fileContent,
-      ContentType: contentType,
-      ACL: 'public-read' // or 'private' if you use signed URLs
+      ContentType: contentType
+      // ACL: 'public-read' // or 'private' if you use signed URLs
     };
 
     const result = await s3.upload(s3Params).promise();

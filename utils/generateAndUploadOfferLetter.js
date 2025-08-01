@@ -70,8 +70,8 @@ exports.generateAndUploadOfferLetter = (user) => {
           Bucket: process.env.S3_BUCKET_NAME,
           Key: `SCL/OfferLetters/${user._id}_offer_letter.pdf`,
           Body: fileContent,
-          ContentType: contentType,
-          ACL: 'public-read'
+          ContentType: contentType
+          // ACL: 'public-read'
         };
 
         await s3Client.send(new PutObjectCommand(uploadParams));
