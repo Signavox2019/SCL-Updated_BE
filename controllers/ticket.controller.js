@@ -10,11 +10,11 @@ const { getPriorityLevel } = require('../utils/priorityManager');
 let supportIndex = 0;
 
 // Generate TicketID
-const generateTicketId = async (userFirstName) => {
-  const count = await Ticket.countDocuments() + 1;
-  const padded = String(count).padStart(3, '0');
-  return `SCLINT+${padded}+${userFirstName[0].toUpperCase()}`;
-};
+// const generateTicketId = async (userFirstName) => {
+//   const count = await Ticket.countDocuments() + 1;
+//   const padded = String(count).padStart(3, '0');
+//   return `SCLINT+${padded}+${userFirstName[0].toUpperCase()}`;
+// };
 
 // Round-robin support assignment (only approved support users)
 const getSupportUser = async () => {
@@ -36,11 +36,118 @@ const calculatePriority = (createdAt) => {
 
 // Create a ticket
 // Controller to create a ticket
+// exports.createTicket = async (req, res) => {
+//   try {
+//     const { title, description } = req.body;
+//     const file = req.file;
+//     const user = req.user; // from token via protect middleware
+
+//     // Validate user
+//     if (!user || !user.firstName) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Invalid user data from token. Please ensure the user is authenticated and has a valid firstName.',
+//       });
+//     }
+
+//     // Generate ticket ID
+//     const userFirstLetter = user.firstName.charAt(0).toUpperCase();
+//     const count = await Ticket.countDocuments();
+//     const ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
+
+//     // Get support user via round-robin
+//     const supportUser = await getSupportUser();
+
+//     // Upload file to Cloudinary (if present)
+//     let fileUrl = null;
+//     if (file) {
+//       const result = await cloudinary.uploader.upload(file.path, {
+//         folder: 'scl/tickets',
+//         resource_type: 'auto'
+//       });
+//       fileUrl = result.secure_url;
+//     }
+
+//     // Create ticket
+//     const ticket = new Ticket({
+//       ticketId,
+//       title,
+//       description,
+//       fileUrl, // Store Cloudinary URL here
+//       createdBy: user._id,
+//       handledBy: supportUser?._id || null,
+//       status: 'Pending',
+//       priority: 'Low'
+//     });
+
+//     await ticket.save();
+
+//     // Notify creator
+//     await sendNotification({
+//       userId: user._id,
+//       title: '🎫 Ticket Created',
+//       message: `Your ticket ${ticket.ticketId} has been successfully created.`
+//     });
+
+//     // Notify assigned support staff
+//     if (supportUser) {
+//       await sendNotification({
+//         userId: supportUser._id,
+//         title: '📥 New Ticket Assigned',
+//         message: `You have been assigned a new ticket ${ticket.ticketId}.`
+//       });
+//     }
+
+//     res.status(201).json({
+//       success: true,
+//       message: 'Ticket created successfully',
+//       ticket
+//     });
+
+//   } catch (err) {
+//     console.error('Error creating ticket:', err);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error while creating ticket',
+//       error: err.message
+//     });
+//   }
+// };
+
+
+// AWS SDK v3
+const { S3Client } = require('@aws-sdk/client-s3');
+
+// Initialize S3 client (v3)
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+// Generate unique ticket ID
+const generateTicketId = async (userFirstLetter) => {
+  let count = await Ticket.estimatedDocumentCount();
+  let ticketId;
+  let exists = true;
+
+  while (exists) {
+    ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
+    const duplicate = await Ticket.findOne({ ticketId });
+    if (!duplicate) exists = false;
+    else count++;
+  }
+
+  return ticketId;
+};
+
 exports.createTicket = async (req, res) => {
   try {
     const { title, description } = req.body;
-    const file = req.file;
-    const user = req.user; // from token via protect middleware
+    const file = req.file; // file uploaded via multer-s3
+    const user = req.user; // from auth middleware
 
     // Validate user
     if (!user || !user.firstName) {
@@ -50,43 +157,33 @@ exports.createTicket = async (req, res) => {
       });
     }
 
-    // Generate ticket ID
     const userFirstLetter = user.firstName.charAt(0).toUpperCase();
-    const count = await Ticket.countDocuments();
-    const ticketId = `SCLINT${String(count + 1).padStart(3, '0')}${userFirstLetter}`;
+    const ticketId = await generateTicketId(userFirstLetter);
 
-    // Get support user via round-robin
+    // Get support user
     const supportUser = await getSupportUser();
 
-    // Upload file to Cloudinary (if present)
-    let fileUrl = null;
-    if (file) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: 'scl/tickets',
-        resource_type: 'auto'
-      });
-      fileUrl = result.secure_url;
-    }
+    // S3 file URL
+    const fileUrl = file?.location || null;
 
-    // Create ticket
     const ticket = new Ticket({
       ticketId,
       title,
       description,
-      fileUrl, // Store Cloudinary URL here
+      fileUrl,
       createdBy: user._id,
       handledBy: supportUser?._id || null,
       status: 'Pending',
-      priority: 'Low'
+      priority: 'Low',
     });
 
     await ticket.save();
 
-    // Notify creator
+    // Notify ticket creator
     await sendNotification({
       userId: user._id,
       title: '🎫 Ticket Created',
-      message: `Your ticket ${ticket.ticketId} has been successfully created.`
+      message: `Your ticket ${ticket.ticketId} has been successfully created.`,
     });
 
     // Notify assigned support staff
@@ -94,14 +191,14 @@ exports.createTicket = async (req, res) => {
       await sendNotification({
         userId: supportUser._id,
         title: '📥 New Ticket Assigned',
-        message: `You have been assigned a new ticket ${ticket.ticketId}.`
+        message: `You have been assigned a new ticket ${ticket.ticketId}.`,
       });
     }
 
     res.status(201).json({
       success: true,
       message: 'Ticket created successfully',
-      ticket
+      ticket,
     });
 
   } catch (err) {
@@ -109,10 +206,13 @@ exports.createTicket = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error while creating ticket',
-      error: err.message
+      error: err.message,
     });
   }
 };
+
+
+
 
 // Get all tickets (admin/support)
 exports.getAllTickets = async (req, res) => {
@@ -372,36 +472,27 @@ exports.updateTicketByUser = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id; // from auth middleware
-
     const { title, description } = req.body;
-    let updatedFileUrl;
 
     // Find the ticket
     const ticket = await Ticket.findById(id);
-
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
-    // Check if the logged-in user is the creator
+    // Ensure the user owns the ticket
     if (ticket.createdBy.toString() !== userId.toString()) {
       return res.status(403).json({ message: 'Unauthorized: You can only update your own ticket' });
     }
 
-    // Optional: Upload new file if provided
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'scl/tickets',
-      });
-      updatedFileUrl = result.secure_url;
+    // Update file if new file is uploaded
+    if (req.file && req.file.location) {
+      ticket.fileUrl = req.file.location; // S3 file URL
     }
 
-    // Update fields
+    // Update title and description if provided
     if (title) ticket.title = title;
     if (description) ticket.description = description;
-    // if (updatedFileUrl) ticket.file = updatedFileUrl;
-    if (updatedFileUrl) ticket.fileUrl = updatedFileUrl;
-
 
     await ticket.save();
 
@@ -409,11 +500,13 @@ exports.updateTicketByUser = async (req, res) => {
       message: 'Ticket updated successfully',
       ticket,
     });
+
   } catch (error) {
     console.error('❌ Error updating ticket by user:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 
 exports.getMyTicketStats = async (req, res) => {

@@ -30,14 +30,16 @@
 
 const fs = require('fs');
 const path = require('path');
-const AWS = require('aws-sdk');
-const mime = require('mime-types'); // to infer content-type from extension
+const mime = require('mime-types');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
-// Configure AWS S3
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
+// Configure S3 client (v3)
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 const uploadCertificateToS3 = async (localFilePath, fileName) => {
@@ -45,20 +47,21 @@ const uploadCertificateToS3 = async (localFilePath, fileName) => {
     const fileContent = fs.readFileSync(localFilePath);
     const contentType = mime.lookup(localFilePath) || 'application/octet-stream';
 
-    const s3Params = {
+    const command = new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: `certificates/${fileName}`, // S3 path
+      Key: `certificates/${fileName}`,
       Body: fileContent,
       ContentType: contentType
-      // ACL: 'public-read' // or 'private' if you use signed URLs
-    };
+      // ACL: 'public-read' // Only if your bucket policy allows it or you want public access
+    });
 
-    const result = await s3.upload(s3Params).promise();
+    await s3Client.send(command);
 
-    // Delete local file after successful upload
+    // Clean up local file after upload
     fs.unlinkSync(localFilePath);
 
-    return result.Location; // S3 URL
+    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/certificates/${fileName}`;
+    return fileUrl;
   } catch (err) {
     console.error('S3 upload failed:', err);
     throw err;

@@ -50,14 +50,16 @@
 
 const multer = require('multer');
 const path = require('path');
-const AWS = require('aws-sdk');
 const multerS3 = require('multer-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
 
-// AWS S3 Config
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION
+// Initialize AWS S3 v3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 // File type filter
@@ -71,9 +73,8 @@ const fileFilter = (allowedTypes) => (req, file, cb) => {
 const getS3Uploader = (folder, allowedTypes) => {
   return multer({
     storage: multerS3({
-      s3,
+      s3: s3Client,
       bucket: process.env.S3_BUCKET_NAME,
-      acl: 'public-read', // or 'private' if you use signed URLs
       contentType: multerS3.AUTO_CONTENT_TYPE,
       key: (req, file, cb) => {
         const ext = path.extname(file.originalname);
@@ -85,7 +86,7 @@ const getS3Uploader = (folder, allowedTypes) => {
   });
 };
 
-// Exported uploaders (same usage as before)
+// Exported uploaders
 exports.uploadResume = getS3Uploader('resumes', ['.pdf', '.doc', '.docx']);
 exports.uploadCertificate = getS3Uploader('certificates', ['.pdf', '.png', '.jpg', '.jpeg']);
 exports.uploadMaterial = getS3Uploader('materials', ['.pdf', '.ppt', '.pptx', '.zip']);

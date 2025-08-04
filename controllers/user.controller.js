@@ -259,6 +259,7 @@ exports.updateOwnProfile = async (req, res) => {
     const userId = req.user._id;
 
     const allowedFields = [
+      'title',
       'firstName', 'middleName', 'lastName',
       'profileImage', 'phone', 'resume',
       'collegeName', 'department', 'university',
