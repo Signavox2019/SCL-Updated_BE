@@ -234,46 +234,45 @@ exports.register = async (req, res) => {
       to: email,
       subject: "📩 Registration Received | Signavox Career Ladder",
       html: `
-<div style="font-family: 'Segoe UI', sans-serif; background-color: #f2f4f8; padding: 0; margin: 0;">
-  <!-- Header Banner -->
-  <div style="width: 100%; background-color: #ffffff;">
-    <img src="https://res.cloudinary.com/dse4pdvw5/image/upload/v1753878636/MacBook_Air_-_1_1_1_dcjrnt.png" alt="Signavox Banner" style="width: 100%; max-height: 180px; object-fit: cover; display: block;" />
-  </div>
-
-  <!-- Card Container -->
-  <div style="max-width: 640px; margin: -50px auto 0; background-color: #ffffff; border-radius: 16px; box-shadow: 0 12px 24px rgba(0,0,0,0.08); padding: 40px 30px; position: relative; z-index: 10;">
-    
-    <!-- Greeting & Title -->
-    <div style="text-align: center;">
-      <h2 style="color: #2E86DE; font-size: 24px; margin-bottom: 10px;">Welcome to Signavox Career Ladder</h2>
-      <p style="color: #555; font-size: 16px; line-height: 1.6;">Hi <strong>${name}</strong>, we're thrilled to have you on board!</p>
+<div style="font-family: Arial, sans-serif; color: #333; font-size: 15px; line-height: 1.6;">
+        <p>Dear ${name},</p>
+ 
+        <p>Greetings from <strong>Signavox Technologies Private Limited</strong>!</p>
+        <p>Further to our recent communication, we are pleased to confirm that your application has been shortlisted for
+            the <strong>Signavox Career Ladder Internship Program</strong>. Based on your stated domain preference, a
+            slot has been successfully allocated in the corresponding specialization area.</p>
+ 
+        <p>As part of the onboarding process, you will shortly receive further instructions regarding the <strong>submission of
+            required documents.</strong> This communication serves as the official confirmation of your enrollment process.</p>
+ 
+        <p>To formally confirm your participation in the upcoming cohort, you are requested to complete the program fee
+            payment as per the details outlined below:</p>
+ 
+        <h3 style="margin-top: 20px;">Payment Information</h3>
+        <ul>
+            <li><strong>Program Fee:</strong> ₹1,00,000 /-</li>
+            <li><strong>Company Name:</strong> Signavox Technologies Private Limited</li>
+            <li><strong>Bank Account Number:</strong> 053311010000075</li>
+            <li><strong>IFSC Code:</strong> UBIN0805335</li>
+        </ul>
+ 
+        <div style="border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; margin-top: 20px;">
+            <p style="margin: 0;"><strong>Note:</strong> Once the payment is completed, kindly share the transaction
+                reference number or a screenshot of the confirmation for our records.</p>
+        </div>
+ 
+        <p style="margin-top: 20px;">In alignment with our sustainability initiatives, all official communication and
+            documentation will be shared electronically.</p>
+ 
+        <p>Once again,<span style="background-color: #e0f7fa; font-weight: bold;">Congratulations</span> on your referral. We look
+            forward to having you onboard and supporting your growth with Signavox.</p>
+ 
+        <p style="margin-top: 30px;"><strong>Thanks & Regards,</strong><br />
+            <strong>Talent Acquisition Team</strong><br />
+            <strong>Signavox Technologies Pvt. Ltd.</strong>
+        </p>
+        <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="signavox" height="50" width="270">
     </div>
-
-    <!-- Body -->
-    <div style="margin-top: 30px; color: #333; font-size: 15px; line-height: 1.7;">
-      <p>Thank you for registering with <strong>Signavox Career Ladder</strong>, our flagship learning platform tailored to empower aspiring professionals like you.</p>
-      <p>Your application has been received and is currently under review by our admin team.</p>
-      <p>Once approved, you'll receive an email with your login credentials to access exclusive learning paths, real-time events, and certification programs.</p>
-    </div>
-
-    <!-- CTA Button -->
-    <div style="text-align: center; margin-top: 35px;">
-      <a href="https://signavoxtechnologies.com" style="background-color: #2E86DE; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block;">Visit Our Website</a>
-    </div>
-
-    <!-- Contact Info -->
-    <div style="margin-top: 40px; font-size: 13px; color: #777; text-align: center;">
-      <p>Need help? Reach out to us at <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE;">support.scl@signavoxtechnologies.com</a></p>
-    </div>
-
-    <!-- Footer -->
-    <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 20px;">
-      <p>&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
-    </div>
-  </div>
-
-  <!-- Spacer -->
-</div>
 
       `
     });
