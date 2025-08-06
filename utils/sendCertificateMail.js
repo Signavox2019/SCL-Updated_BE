@@ -26,7 +26,7 @@ const sendCertificateMail = async ({ to, name, courseTitle, certUrl, certId }) =
   `;
 
   await transporter.sendMail({
-    from: `"Signavox Career Ladder" <${process.env.MAIL_USER}>`,
+    from: `"Signavox Career Ladder" <${process.env.EMAIL_USER}>`,
     to,
     subject: `🎓 Your Certificate for ${courseTitle}`,
     html,

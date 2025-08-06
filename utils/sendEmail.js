@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false // optional but may help for dev
   }
 });
-console.log(process.env.MAIL_HOST, process.env.EMAIL_USER); // should show office365 and your email
+// console.log(process.env.MAIL_HOST, process.env.EMAIL_USER); // should show office365 and your email
 
 
 const sendEmail = async (to, subject, html) => {

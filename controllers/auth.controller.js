@@ -121,6 +121,7 @@ const transporter = nodemailer.createTransport({
 exports.register = async (req, res) => {
   try {
     const {
+      title,              // Optional: e.g. Mr., Ms., Dr.
       // Personal Details
       firstName,
       middleName,
@@ -177,6 +178,7 @@ exports.register = async (req, res) => {
 
     // Create new user
     const user = await User.create({
+      title,
       firstName,
       middleName,
       lastName,

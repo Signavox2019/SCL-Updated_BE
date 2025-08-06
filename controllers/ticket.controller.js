@@ -241,7 +241,7 @@ exports.getTicketById = async (req, res) => {
 // Get current user's tickets
 exports.getMyTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find({ createdBy: req.user._id });
+    const tickets = await Ticket.find({ createdBy: req.user._id }).populate('handledBy', 'firstName email').populate('forwardedTo', 'firstName email').populate('createdBy', 'firstName email');
     res.json(tickets);
   } catch (err) {
     console.error('❌ Error fetching user tickets:', err);
