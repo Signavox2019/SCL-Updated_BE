@@ -3,39 +3,34 @@ const router = express.Router();
 const userController = require('../controllers/user.controller');
 const { protect, allowRoles } = require('../middleware/auth.middleware');
 
+// Logged-in user's own profile
 router.get('/me', protect, userController.getOwnProfile);
 
-
+// Own offer letter
 router.get('/my-offer-letter', protect, userController.generateMyOfferLetter);
 
-// Get Waiting Users
+// ✅ Waiting users – only for admin
 router.get('/waiting', protect, allowRoles('admin'), userController.getWaitingUsers);
 
+// ✅ All users – admin and support can access
+router.get('/', protect, allowRoles('admin', 'support'), userController.getAllUsers);
 
-// Get all users (Admin)
-router.get('/', protect, allowRoles('admin'), userController.getAllUsers);
+// ✅ Specific user by ID – admin and support can access
+router.get('/:id', protect, allowRoles('admin', 'support'), userController.getUser);
 
-// Get specific user by ID
-router.get('/:id', protect, allowRoles('admin'), userController.getUser);
-
-// Approve or reject user registration (Admin)
+// ✅ Approve/reject user – still admin only
 router.put('/status/:id', protect, allowRoles('admin'), userController.updateUserStatus);
 
-// router.put('/update-role', protect, allowRoles('Admin'), userController.updateUserRole);
+// ✅ Admin update a user – admin and support
+router.put('/admin/update-user/:id', protect, allowRoles('admin', 'support'), userController.updateUserByAdmin);
 
-
-// Delete user (Admin)
-router.delete('/:id', protect, allowRoles('admin'), userController.deleteUser);
-
-// Get user metrics
-router.get('/stats/metrics', protect, allowRoles('admin'), userController.userStats);
-
-
-
-router.put('/admin/update-user/:id', protect, allowRoles('admin'), userController.updateUserByAdmin);
+// ✅ Self profile update
 router.put('/me/update-profile', protect, userController.updateOwnProfile);
 
+// ✅ Delete user – admin and support
+router.delete('/:id', protect, allowRoles('admin', 'support'), userController.deleteUser);
 
-
+// ✅ User metrics – admin and support
+router.get('/stats/metrics', protect, allowRoles('admin', 'support'), userController.userStats);
 
 module.exports = router;

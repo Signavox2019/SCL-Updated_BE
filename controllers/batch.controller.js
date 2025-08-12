@@ -42,6 +42,22 @@ exports.createBatch = async (req, res) => {
     });
 
     await batch.save();
+
+    // 🔹 Update assigned batch in User schema
+    if (users && users.length > 0) {
+      await User.updateMany(
+        { _id: { $in: users } },
+        {
+          $set: {
+            batchAssigned: batch._id,
+            courseRegisteredFor: course,
+            courseStartDate: startDate,
+            courseEndDate: endDate || null
+          }
+        }
+      );
+    }
+
     res.status(201).json({ message: 'Batch created successfully', batch });
   } catch (error) {
     res.status(500).json({ message: 'Error creating batch', error });
@@ -903,6 +919,35 @@ exports.updateBatch = async (req, res) => {
     // Save and return
     await batch.save();
 
+    if (users) {
+      // Remove batch from users no longer in it
+      const removedUsers = oldUsers.filter(uid => !users.includes(uid));
+      if (removedUsers.length > 0) {
+        await User.updateMany(
+          { _id: { $in: removedUsers } },
+          {
+            $unset: { batchAssigned: "", courseRegisteredFor: "", courseStartDate: "", courseEndDate: "" }
+          }
+        );
+      }
+
+      // Assign batch to new users
+      const newUsers = users.filter(uid => !oldUsers.includes(uid));
+      if (newUsers.length > 0) {
+        await User.updateMany(
+          { _id: { $in: newUsers } },
+          {
+            $set: {
+              batchAssigned: batch._id,
+              courseRegisteredFor: batch.course,
+              courseStartDate: batch.startDate,
+              courseEndDate: batch.endDate || null
+            }
+          }
+        );
+      }
+    }
+
     const populated = await Batch.findById(batch._id)
       .populate('course', 'title')
       .populate('users', 'name email')
@@ -1262,7 +1307,7 @@ exports.getBatchStats = async (req, res) => {
 //     batch.certificatesIssued = true;
 //     batch.certificatesIssuedAt = new Date();
 //     await batch.save();
-    
+
 //     // Step 4: Return success response
 //     return res.status(200).json({
 //       message: `Certificates successfully sent to all ${users.length} users in batch "${batch.batchName}"`,

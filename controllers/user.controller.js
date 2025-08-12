@@ -163,6 +163,7 @@ exports.userStats = async (req, res) => {
     const total = await User.countDocuments();
     const interns = await User.find({ role: 'intern' });
     const admins = await User.find({ role: 'admin' });
+    const supports = await User.find({ role: 'support' });
     const approved = await User.find({ approveStatus: 'approved' });
     const pending = await User.find({ approveStatus: 'waiting' });
     const rejected = await User.find({ approveStatus: 'rejected' });
@@ -176,6 +177,7 @@ exports.userStats = async (req, res) => {
         interns: interns.length,
         professors: professorCount,
         admins: admins.length,
+        supports: supports.length,
         approvedUsers: approved.length,
         pendingApprovals: pending.length,
         rejectedUsers: rejected.length,
@@ -184,6 +186,7 @@ exports.userStats = async (req, res) => {
         interns,
         professors,
         admins,
+        supports,
         approved,
         pending,
         rejected

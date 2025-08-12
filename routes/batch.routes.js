@@ -10,8 +10,8 @@ router.get('/date-range', protect, allowRoles('admin'), batchController.getBatch
 
 
 router.post('/',  protect, allowRoles('admin'),  batchController.createBatch);
-router.get('/',  protect, allowRoles('admin'),  batchController.getAllBatches);
-router.get('/stats',  protect, allowRoles('admin'),  batchController.getBatchStats);
+router.get('/',  protect, allowRoles('admin', 'support'),  batchController.getAllBatches);
+router.get('/stats',  protect, allowRoles('admin', 'support'),  batchController.getBatchStats);
 router.get('/:id',  protect, allowRoles('admin'),  batchController.getBatchById);
 router.put('/:id',  protect, allowRoles('admin'),  batchController.updateBatch);
 router.delete('/:id',  protect, allowRoles('admin'),  batchController.deleteBatch);
