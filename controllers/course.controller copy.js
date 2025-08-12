@@ -22,7 +22,7 @@ exports.createCourse = async (req, res) => {
     prof.courses.push(course._id);
     await prof.save();
 
-
+    
 
     res.status(201).json({ message: "Course created and linked to professor", course });
   } catch (error) {
@@ -90,10 +90,6 @@ exports.enrollUser = async (req, res) => {
       await course.save();
     }
     else return res.status(400).json({ message: "User already enrolled" });
-
-    await User.findByIdAndUpdate(userId, {
-      courseRegisteredFor: course._id
-    });
 
 
     res.status(200).json({ message: "User enrolled", course });
