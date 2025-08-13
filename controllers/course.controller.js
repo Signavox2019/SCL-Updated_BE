@@ -94,6 +94,7 @@ exports.enrollUser = async (req, res) => {
     await User.findByIdAndUpdate(userId, {
       courseRegisteredFor: course._id
     });
+    // console.log(`User ${userId} enrolled in course ${course._id}`);
 
 
     res.status(200).json({ message: "User enrolled", course });

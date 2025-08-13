@@ -4,7 +4,7 @@ const Progress = require('../models/Progress');
 const enrollmentSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  amountPaid: { type: Number, required: true },
+  amountPaid: { type: Number },
   currency: { type: String, default: "INR" },
   paymentMethod: { type: String, enum: ["Stripe", "Razorpay", "PayPal", "Free"], default: "Free" },
   paymentStatus: { type: String, enum: ["Pending", "Success", "Failed"], default: "Pending" },

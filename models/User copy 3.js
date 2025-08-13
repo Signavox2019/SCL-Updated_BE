@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
   // Course & Batch Details
   courseRegisteredFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, // Link to Course model
   batchAssigned: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch' },         // Link to Batch model
+  courseStartDate: { type: Date },
+  courseEndDate: { type: Date },
+  batchTiming: { type: String }, // e.g., "10:00 AM - 12:00 PM"
+  batchMode: { type: String, enum: ['online', 'offline', 'hybrid'], default: 'online' },
 
   // Payment Details
   amount: {

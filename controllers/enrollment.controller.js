@@ -1,10 +1,11 @@
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
+const User = require('../models/User');
 
 // Enroll in course (with/without payment)
 exports.enrollInCourse = async (req, res) => {
   try {
-    const { userId, courseId, amountPaid, paymentMethod, transactionId, paymentStatus, receiptUrl } = req.body;
+    const { userId, courseId } = req.body;
 
     const alreadyEnrolled = await Enrollment.findOne({ user: userId, course: courseId });
     if (alreadyEnrolled) return res.status(400).json({ message: "User already enrolled" });
@@ -12,11 +13,11 @@ exports.enrollInCourse = async (req, res) => {
     const newEnrollment = await Enrollment.create({
       user: userId,
       course: courseId,
-      amountPaid,
-      paymentMethod,
-      transactionId,
-      paymentStatus,
-      receiptUrl
+      // amountPaid,
+      // paymentMethod,
+      // transactionId,
+      // paymentStatus,
+      // receiptUrl
     });
 
     // Add user to course.enrolledUsers
@@ -24,9 +25,16 @@ exports.enrollInCourse = async (req, res) => {
       $addToSet: { enrolledUsers: userId }
     });
 
+    
+    await User.findByIdAndUpdate(userId, {
+      courseRegisteredFor: courseId
+    });
+    console.log(`User ${userId} enrolled in course ${courseId}`);
+
     res.status(201).json({ message: "Enrolled successfully", enrollment: newEnrollment });
   } catch (error) {
     res.status(500).json({ message: "Error enrolling in course", error });
+    console.error("Enrollment error:", error);
   }
 };
 
