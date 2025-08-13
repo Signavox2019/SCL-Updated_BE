@@ -241,20 +241,7 @@ exports.updateUserByAdmin = async (req, res) => {
 
 
 
-// Get own profile
-exports.getOwnProfile = async (req, res) => {
-  try {
-    const userId = req.user._id;
 
-    const user = await User.findById(userId).select('-password -generatedPassword');
-
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    res.status(200).json({ user });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile', error });
-  }
-};
 
 
 // Update own profile (intern-safe)
@@ -297,7 +284,7 @@ exports.getOwnProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const user = await User.findById(userId).select('-password -generatedPassword');
+    const user = await User.findById(userId).select('-password -generatedPassword').populate('courseRegisteredFor', 'title').populate('batchAssigned', 'batchName');
 
     if (!user) return res.status(404).json({ message: 'User not found' });
 
