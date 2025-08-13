@@ -92,7 +92,7 @@ userSchema.pre('save', function (next) {
   this.name = [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');
 
   if (this.amount) {
-    this.amount.finalAmount = Math.max((this.amount.courseAmount || 0) - (this.amount.discount || 0), 0);
+    this.amount.finalAmount =Math.max(this.amount.courseAmount - (this.amount.courseAmount * this.amount.discount / 100), 0);
     this.amount.balanceAmount = Math.max((this.amount.finalAmount || 0) - (this.amount.paidAmount || 0), 0);
   }
 
@@ -116,6 +116,8 @@ userSchema.pre(['findOneAndUpdate', 'updateOne'], function (next) {
     const paidAmount = update.amount.paidAmount ?? 0;
 
     update.amount.finalAmount = Math.max(courseAmount - (courseAmount * discount / 100), 0);
+    console.log('Final Amount:', update.amount.finalAmount);
+    console.log('Paid Amount:', paidAmount);
     
     update.amount.balanceAmount = Math.max(update.amount.finalAmount - paidAmount, 0);
   }

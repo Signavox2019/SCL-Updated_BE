@@ -223,8 +223,8 @@ exports.register = async (req, res) => {
       // courseRegisteredFor: null, // Initially null
       amount: {
         courseAmount: amount.courseAmount || 0,
+        discount: amount.discount || 0,
         paidAmount: amount.paidAmount || 0,
-        balanceAmount: amount.balanceAmount || 0
       }
     });
 
