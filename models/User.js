@@ -116,8 +116,8 @@ userSchema.pre(['findOneAndUpdate', 'updateOne'], function (next) {
     const paidAmount = update.amount.paidAmount ?? 0;
 
     update.amount.finalAmount = Math.max(courseAmount - (courseAmount * discount / 100), 0);
-    console.log('Final Amount:', update.amount.finalAmount);
-    console.log('Paid Amount:', paidAmount);
+    // console.log('Final Amount:', update.amount.finalAmount);
+    // console.log('Paid Amount:', paidAmount);
     
     update.amount.balanceAmount = Math.max(update.amount.finalAmount - paidAmount, 0);
   }

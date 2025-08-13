@@ -31,7 +31,7 @@ exports.getAllUsers = async (req, res) => {
 // ✅ Get a specific user profile
 exports.getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).populate('courseRegisteredFor', 'title').populate('batchAssigned', 'batchName');
     if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user);
   } catch (error) {
@@ -235,6 +235,7 @@ exports.updateUserByAdmin = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error updating user by admin', error });
+    // console.error('Error updating user by admin:', error);
   }
 };
 
