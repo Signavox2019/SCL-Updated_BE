@@ -43,6 +43,10 @@ const userSchema = new mongoose.Schema({
   // Course & Batch Details
   courseRegisteredFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, // Link to Course model
   batchAssigned: { type: mongoose.Schema.Types.ObjectId, ref: 'Batch' },         // Link to Batch model
+  batchStartDate: { type: Date },
+  batchEndDate: { type: Date },
+  batchTiming: { type: String }, // e.g., "10:00 AM - 12:00 PM"
+  batchMode: { type: String, enum: ['online', 'offline', 'hybrid'], default: 'offline' },
 
   // Payment Details
   amount: {
@@ -111,7 +115,8 @@ userSchema.pre(['findOneAndUpdate', 'updateOne'], function (next) {
     const discount = update.amount.discount ?? 0;
     const paidAmount = update.amount.paidAmount ?? 0;
 
-    update.amount.finalAmount = Math.max(courseAmount - discount, 0);
+    update.amount.finalAmount = Math.max(courseAmount - (courseAmount * discount / 100), 0);
+    
     update.amount.balanceAmount = Math.max(update.amount.finalAmount - paidAmount, 0);
   }
 

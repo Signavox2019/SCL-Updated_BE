@@ -7,7 +7,7 @@ const { protect, allowRoles } = require('../middleware/auth.middleware');
 router.get('/me', protect, userController.getOwnProfile);
 
 // Own offer letter
-router.get('/my-offer-letter', protect, userController.generateMyOfferLetter);
+router.get('/:userId/offer-letter', protect, userController.generateOfferLetter);
 
 // ✅ Waiting users – only for admin
 router.get('/waiting', protect, allowRoles('admin'), userController.getWaitingUsers);

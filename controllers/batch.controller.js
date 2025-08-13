@@ -50,9 +50,9 @@ exports.createBatch = async (req, res) => {
         {
           $set: {
             batchAssigned: batch._id,
-            courseRegisteredFor: course,
-            courseStartDate: startDate,
-            courseEndDate: endDate || null
+            // courseRegisteredFor: course,
+            batchStartDate: startDate,
+            batchEndDate: endDate || null
           }
         }
       );
@@ -926,7 +926,7 @@ exports.updateBatch = async (req, res) => {
         await User.updateMany(
           { _id: { $in: removedUsers } },
           {
-            $unset: { batchAssigned: "", courseRegisteredFor: "", courseStartDate: "", courseEndDate: "" }
+            $unset: { batchAssigned: "", batchStartDate: "", batchEndDate: "" }
           }
         );
       }
@@ -939,9 +939,8 @@ exports.updateBatch = async (req, res) => {
           {
             $set: {
               batchAssigned: batch._id,
-              courseRegisteredFor: batch.course,
-              courseStartDate: batch.startDate,
-              courseEndDate: batch.endDate || null
+              batchStartDate: batch.startDate,
+              batchEndDate: batch.endDate || null
             }
           }
         );

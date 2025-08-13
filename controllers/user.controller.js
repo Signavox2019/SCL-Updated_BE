@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 // ✅ Get all users (Admin)
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ registeredAt: -1 });
+    const users = await User.find().sort({ registeredAt: -1 }).populate('courseRegisteredFor', 'title').populate('batchAssigned', 'batchName');
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch users", error });
@@ -309,9 +309,13 @@ exports.getOwnProfile = async (req, res) => {
 
 
 
-exports.generateMyOfferLetter = async (req, res) => {
+exports.generateOfferLetter = async (req, res) => {
   try {
-    const user = req.user; // from token (auth middleware)
+    const userId = req.params.userId; 
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    // console.log('Generating offer letter for user:', user);
 
     const offerLetterUrl = await generateAndUploadOfferLetter(user);
 

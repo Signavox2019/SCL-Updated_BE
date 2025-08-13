@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const Professor = require('../models/Professor');
+const User = require('../models/User');
 
 exports.createCourse = async (req, res) => {
   try {
@@ -100,6 +101,7 @@ exports.enrollUser = async (req, res) => {
     res.status(200).json({ message: "User enrolled", course });
   } catch (error) {
     res.status(500).json({ message: "Error enrolling user", error });
+    console.error("Error enrolling user:", error);
   }
 };
 
@@ -115,3 +117,28 @@ exports.courseStats = async (req, res) => {
     res.status(500).json({ message: "Error fetching stats", error });
   }
 };
+
+
+exports.unenrollUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const course = await Course.findById(req.params.courseId);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    if (course.enrolledUsers.includes(userId)) {
+      course.enrolledUsers.pull(userId);
+      await course.save();
+    } else {
+      return res.status(400).json({ message: "User not enrolled in this course" });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      $unset: { courseRegisteredFor: "" }
+    });
+
+    res.status(200).json({ message: "User exited course", course });
+  } catch (error) {
+    res.status(500).json({ message: "Error exiting course", error });
+    console.error("Error unenrolling user:", error);
+  }
+} 

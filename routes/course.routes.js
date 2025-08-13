@@ -15,6 +15,8 @@ router.delete('/:id', protect, allowRoles('admin'), courseController.deleteCours
 // Enroll user
 router.post('/:courseId/enroll', protect, courseController.enrollUser);
 
+router.delete('/:courseId/unenroll', protect, courseController.unenrollUser);
+
 // Stats
 router.get('/stats/metrics', protect, courseController.courseStats);
 
