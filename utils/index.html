@@ -1,28 +1,4 @@
-
-module.exports = (user) => {
-  // Helper function to format date (e.g., "Aug 06th 2025")
-  const formatDate = (date) => {
-    if (!date) return '';
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    const daySuffix = (d) => {
-      if (d > 4 && d < 21) return 'th';
-      switch (d % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
-    };
-    return `${month} ${day}${daySuffix(day)} ${year}`;
-  };
-
-  const currentDate = formatDate(new Date());
-  const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : '';
-
-  return `
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -57,30 +33,20 @@ module.exports = (user) => {
             height: 100%;
             background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
             background-repeat: no-repeat;
-            background-position: center center; /* keeps it in the middle */
-            background-size: 800px auto; /* increased width while maintaining aspect ratio */
-            opacity: 0.15; /* keep it slightly lighter for watermark effect */
+            background-position: center center;
+            background-size: 400px auto;
+            opacity: 0.2;
             z-index: 0;
             pointer-events: none;
         }
 
-
         .content {
             position: relative;
             z-index: 1;
-            font-size: 20px;
-            line-height: 1.5;
-            font-weight: 500;
-            color: #000;
+            font-size: 18px;
+            line-height: 1.4;
             width: 100%;
-            height: 100%;
-            min-height: 380mm;
-            max-height: 380mm;
-            padding-bottom: 25mm; /* ensure content never overlaps footer */
-            box-sizing: border-box;
-            overflow: hidden; /* keep overflow within page */
-            word-break: break-word;
-            hyphens: auto;
+            margin-bottom: 20mm;
         }
 
         h1,
@@ -96,12 +62,12 @@ module.exports = (user) => {
 
         .footer {
             position: relative;
-            left: 5mm;
-            right: 5mm;
             top: 10mm;
-            bottom: 5mm; /* stick footer near bottom on all pages */
+            bottom: 2mm;
+            /* left: 5mm;
+            right: 5mm; */
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 700;
             color: #000;
             border-top: 2px solid #ccc;
@@ -118,14 +84,8 @@ module.exports = (user) => {
             padding-left: 20px;
         }
 
-        // ol {
-        //     padding-left: 20px;
-        // }
-        @media print {
-            .page {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+        ol {
+            padding-left: 20px;
         }
     </style>
 </head>
@@ -154,18 +114,18 @@ module.exports = (user) => {
                 </li>
                 <li><strong>DESIGNATION:</strong> Software Engineer Intern</li>
                 <li><strong>PLACEMENT OF WORK</strong>
-                    <ol type="i">
+                    <ul>
                         <li>Your place of work will be <strong>${user.placeOfWork || 'Hyderabad'}</strong>.</li>
                         <li>You may be required to work in any Position, Department or Shift as may be assigned from
                             time to time.</li>
                         <li>During your internship, you may be transferred to any of the establishments of the Company
                             or its associated Companies in which case you will be governed by the rules and regulations
                             applicable to that establishment.</li>
-                    </ol>
+                    </ul>
                 </li>
                 <li><strong>WORKING HOURS</strong><br>
                     Company follows 9-hour workday and 05 working days a week, with Saturday and Sunday as weekly off
-                    for General shift associates. The core working hours are from <strong>9.30 AM </strong> to <strong> 6.30 PM</strong>.
+                    for General shift associates. The core working hours are from 9.30 AM to 6.30 PM.
                 </li>
                 <li><strong>SECRECY</strong>
                     <ol type="i">
@@ -217,8 +177,8 @@ module.exports = (user) => {
     <!-- PAGE 2 -->
     <div class="page">
         <div class="content">
-        <ol>
-            <ol type="i" start="3">
+            <ol start="6">
+                <ol>
                     <li>You have been offered this position in good faith that all the information and documents
                         provided by you at the time of engagement for this employment are true and correct. Your
                         continued engagement is contingent upon satisfactory background verification. SIGNAVOX
@@ -237,9 +197,6 @@ module.exports = (user) => {
                         be dealt with under the disciplinary procedure which could result in disciplinary action being
                         taken against you by the Company and which may result in the termination of your employment.
                     </li>
-                    </ol>
-                    </ol>
-                    <ol type="1" start="8">
                     <li><strong>NOTICE PERIOD</strong><br>
                         During the Internship program, your services can be terminated by giving <strong>15
                             days'</strong>
@@ -293,15 +250,9 @@ module.exports = (user) => {
                             statutory deductions, and is typically processed at the end of each month for associates who
                             have joined before the payroll cut-off.</strong>
                     </li>
-                    <br>
-                    <li><strong>TOTAL REWARDS</strong><br><br>
-                    SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per
-                    market standards, including an excellent benefits program comprising health, finance and wealth,
-                    work/life balance, and learning and career benefits.
-                    <br><br>
-        
-                    
-                    </ol>
+                </ol>
+
+            </ol>
         </div>
         <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
@@ -310,14 +261,20 @@ module.exports = (user) => {
     <!-- PAGE 3 -->
     <div class="page">
         <div class="content">
-        <ol>
-            <ol type="i">
+            <ol start="8">
+                <li><strong>TOTAL REWARDS</strong><br><br>
+                    SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per
+                    market standards, including an excellent benefits program comprising health, finance and wealth,
+                    work/life balance, and learning and career benefits.
+                    <br><br>
+                    <ol type="i">
                         <li><strong>COMPENSATION</strong><br>
                             SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable
                             compensation for every associate. We always value excellence and high performance.
-                        </li><br>
-                During your Internship period, you shall be eligible for a stipend of <strong>INR 7000
+                            <br><br>
+                            During your Internship period, you shall be eligible for a stipend of <strong>INR 7000
                                 (Rupees Seven Thousand Only)</strong> on last 3 months.
+                        </li><br>
                         <li><strong>LEAVE</strong><br>
                             You will be entitled to 3 Days leave in a calendar year on a monthly accrual basis.
                         </li><br>
@@ -332,6 +289,12 @@ module.exports = (user) => {
                             core enablers which drive
                             employee engagement and organizational performance.
                         </li><br>
+                        Health Insurance:<br>
+                        You shall be covered under the following Insurance benefits from the date of joining as
+                        Interns and the cost of premium will
+                        be borne by the Company during your training period:
+                        <br><br>
+
                         <li><strong>REWARDS AND RECOGNITION PROGRAMS</strong><br>
                             SIGNAVOX TECHNOLOGIES acknowledges employee contributions, commitment and efforts towards
                             endeavors and achievements. The Company promotes performance and optimistic behaviors
@@ -342,18 +305,27 @@ module.exports = (user) => {
                             higher/new roles and reach your potential by frequently helping you to enhance skills or
                             acquire new skills.
                         </li>
+                    </ol>
                 </li>
-            </ol>
             </ol>
         </div>
         <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
     </div>
 
-    
+    <!-- PAGE 4 -->
+    <!-- <div class="page">
+        <div class="content">
+            <ol start="14">
+
+            </ol>
+        </div>
+        <div class="footer">
+            SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
+            500081
+        </div>
+    </div> -->
 
 </body>
 
 </html>
-  `;
-};

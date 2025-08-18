@@ -68,7 +68,7 @@ exports.generateAndUploadOfferLetter = (user) => {
 
         const uploadParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `SCL/OfferLetters/${user._id}_offer_letter.pdf`,
+          Key: `SCL/OfferLetters/${user.name}_offer_letter.pdf`,
           Body: fileContent,
           ContentType: contentType
           // ACL: 'public-read'
