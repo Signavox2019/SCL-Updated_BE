@@ -34,6 +34,21 @@ module.exports = (user) => {
             margin: 0;
             padding: 0;
         }
+        .header-logo {
+            position: absolute;
+            top: 15mm;
+            left: 5mm;
+            width: 300px;
+            height: 70px;
+            z-index: 2;
+        }
+        .offer-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 90px; /* pushes below the logo */
+            margin-bottom: 40px;
+        }
 
         .page {
             width: 100%;
@@ -59,7 +74,7 @@ module.exports = (user) => {
             background-repeat: no-repeat;
             background-position: center center; /* keeps it in the middle */
             background-size: 800px auto; /* increased width while maintaining aspect ratio */
-            opacity: 0.15; /* keep it slightly lighter for watermark effect */
+            opacity: 0.30; /* keep it slightly lighter for watermark effect */
             z-index: 0;
             pointer-events: none;
         }
@@ -69,9 +84,8 @@ module.exports = (user) => {
             position: relative;
             z-index: 1;
             font-size: 20px;
-            line-height: 1.5;
             font-weight: 500;
-            color: #000;
+            line-height: 1.4;
             width: 100%;
             height: 100%;
             min-height: 380mm;
@@ -91,7 +105,7 @@ module.exports = (user) => {
 
         .date-right {
             text-align: right;
-            font-size: 16px;
+            font-size: 20px;
         }
 
         .footer {
@@ -101,7 +115,7 @@ module.exports = (user) => {
             top: 10mm;
             bottom: 5mm; /* stick footer near bottom on all pages */
             text-align: center;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 700;
             color: #000;
             border-top: 2px solid #ccc;
@@ -127,6 +141,10 @@ module.exports = (user) => {
                 print-color-adjust: exact;
             }
         }
+            ol li,
+            ul li {
+                  margin-bottom: 12px; /* extra space between items */
+}
     </style>
 </head>
 
@@ -134,15 +152,17 @@ module.exports = (user) => {
 
     <!-- PAGE 1 -->
     <div class="page">
+    <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="Logo" class="header-logo" />
+
         <div class="content">
-            <div class="date-right">DATE: ${currentDate}</div><br>
+        <div class="offer-title">OFFER & APPOINTMENT LETTER</div>
+            <div class="date-right">Date: ${currentDate}</div>
             <p>
                 To,<br>
                 <strong>${user.name || ''}</strong><br>
                 ${user.employeeAddress || ''}
             </p>
             <p>Dear ${user.firstName || ''},</p>
-            <p><strong>Sub: Offer of appointment as Intern</strong></p>
             <p>Congratulations!</p>
             <p>
                 After the discussion we had recently with you, we are pleased to offer you an appointment with
@@ -188,24 +208,8 @@ module.exports = (user) => {
                 statutory and/or regulatory obligations, including (but not limited to) SIGNAVOX TECHNOLOGIES policies
                 and procedures on, and any other obligations relating to, anti-bribery and corruption. Failure to do so
                 may result in disciplinary action being taken against you.
-                <br><br>
-                You should familiarize yourself with all policies and procedures that apply to your grade and business
-                area as set out on intranet Signavoxtechnologies.com.<br><br>
-                <li><strong>TERMINATION OF SERVICE</strong></li>
-                <ol type="i">
-                    <li>This offer is our formal contract and must be read and accepted in conjunction with the
-                        Internship Agreement, Proprietary Agreement and Disclosure of interest. In addition to these
-                        terms and conditions stated in the above documents, there are other Company policies and
-                        procedures which you agree to observe and follow during your internship and, if applicable,
-                        subsequent employment with SIGNAVOX TECHNOLOGIES. These Company policies and procedures may vary
-                        from time to time.</li><br>
-                    <li>If at any time, in the opinion of the Company, which shall be final, you are deemed insolvent or
-                        are found to be guilty of dishonesty, disobedience, disorderly behavior, negligence,
-                        indiscipline, absence from duty without permission or of any conduct unbecoming of the status
-                        and the post you hold in the Company’s interests or of violation of one or more terms of this
-                        letter, your services may be terminated immediately.</li><br>
-                    
-                </ol>
+                
+
 
             </ol>
         </div>
@@ -217,14 +221,28 @@ module.exports = (user) => {
     <!-- PAGE 2 -->
     <div class="page">
         <div class="content">
-        <ol>
-            <ol type="i" start="3">
+        <ol>You should familiarize yourself with all policies and procedures that apply to your grade and business
+                area as set out on intranet Signavoxtechnologies.com.</ol>
+                <ol type="1" start="7">
+                <li><strong>TERMINATION OF SERVICE</strong></li>                
+            <ol type="i">
+                  <li>This offer is our formal contract and must be read and accepted in conjunction with the
+                        Internship Agreement, Proprietary Agreement and Disclosure of interest. In addition to these
+                        terms and conditions stated in the above documents, there are other Company policies and
+                        procedures which you agree to observe and follow during your internship and, if applicable,
+                        subsequent employment with SIGNAVOX TECHNOLOGIES. These Company policies and procedures may vary
+                        from time to time.</li>
+                    <li>If at any time, in the opinion of the Company, which shall be final, you are deemed insolvent or
+                        are found to be guilty of dishonesty, disobedience, disorderly behavior, negligence,
+                        indiscipline, absence from duty without permission or of any conduct unbecoming of the status
+                        and the post you hold in the Company’s interests or of violation of one or more terms of this
+                        letter, your services may be terminated immediately.</li>
                     <li>You have been offered this position in good faith that all the information and documents
                         provided by you at the time of engagement for this employment are true and correct. Your
                         continued engagement is contingent upon satisfactory background verification. SIGNAVOX
                         TECHNOLOGIES reserves the right to terminate your engagement without notice if the information
                         and documents provided by you are found incorrect. SIGNAVOX TECHNOLOGIES warrants the right to
-                        recover the costs incurred to perform the check and withhold your salary thereby.</li><br>
+                        recover the costs incurred to perform the check and withhold your salary thereby.</li>
                     <li>Absences from Work: Approval should be obtained in advance from your line manager for absence
                         during working hours. If unexpected circumstances mean that this is not possible, you should
                         inform your line manager as soon as possible. Absence without approval and / or explanation will
@@ -238,8 +256,6 @@ module.exports = (user) => {
                         taken against you by the Company and which may result in the termination of your employment.
                     </li>
                     </ol>
-                    </ol>
-                    <ol type="1" start="8">
                     <li><strong>NOTICE PERIOD</strong><br>
                         During the Internship program, your services can be terminated by giving <strong>15
                             days'</strong>
@@ -255,7 +271,7 @@ module.exports = (user) => {
                         any notice. Any reduction/waiver of the notice period shall be at the sole discretion of the
                         Company. The Company may adjust the balance of annual leave, while granting such a
                         reduction/waiver.
-                    </li><br>
+                    </li>
                     <li><strong>RULES & REGULATIONS</strong><br>
                         During your employment, you will be governed by the rules, regulations of service and orders of
                         the
@@ -267,40 +283,14 @@ module.exports = (user) => {
                         <br><br>
                         This offer will automatically lapse if not accepted within one (1) week from the date of this
                         letter.
-                    </li><br>
+                    </li>
                     <li><strong>PERSONAL INFORMATION (PI)</strong><br>
                         During the process of your employment with Signavox Technologies you may provide or confirm the
                         confidential data or any information that is related to you personally, including without
                         limitation
-                        to your email, contact details, taxation, family records, medical records (PI). You confirm that
-                        Signavox Technologies may collect use, transfer, store or process such PI as per SIGNAVOX
-                        TECHNOLOGIES policies, for Signavox Technologies benefits, Background verifications, financial
-                        and
-                        accounting aspects and for risk management purposes.
-                    </li><br>
-                    <li><strong>COMPENSATION STRUCTURE</strong><br>
-                        The company may, at any time, review and/or restructure the compensation package based on
-                        Signavox
-                        Technologies Policy or any local legislation changes.
-                    </li><br>
-                    <li><strong>TAX IMPLICATION</strong><br>
-                        You are responsible for declarations and implications for all your personal income tax and
-                        filing
-                        returns on a yearly basis.
-                    </li><br>
-                    <li><strong>PAYROLL DATE</strong><br>
-                        <strong>Stipend will be paid monthly, subject to applicable taxes, duties, cases, and other
-                            statutory deductions, and is typically processed at the end of each month for associates who
-                            have joined before the payroll cut-off.</strong>
+                        to your email,
                     </li>
-                    <br>
-                    <li><strong>TOTAL REWARDS</strong><br><br>
-                    SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per
-                    market standards, including an excellent benefits program comprising health, finance and wealth,
-                    work/life balance, and learning and career benefits.
-                    <br><br>
-        
-                    
+
                     </ol>
         </div>
         <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
@@ -310,40 +300,65 @@ module.exports = (user) => {
     <!-- PAGE 3 -->
     <div class="page">
         <div class="content">
-        <ol>
-            <ol type="i">
+        <ol> contact details, taxation, family records, medical records (PI). You confirm that
+                        Signavox Technologies may collect use, transfer, store or process such PI as per SIGNAVOX
+                        TECHNOLOGIES policies, for Signavox Technologies benefits, Background verifications, financial
+                        and
+                        accounting aspects and for risk management purposes.</ol>
+            <ol type="1" start="11">
+            <li><strong>COMPENSATION STRUCTURE</strong><br>
+                        The company may, at any time, review and/or restructure the compensation package based on
+                        Signavox
+                        Technologies Policy or any local legislation changes.
+                    </li>
+                    <li><strong>TAX IMPLICATION</strong>
+                        You are responsible for declarations and implications for all your personal income tax and
+                        filing
+                        returns on a yearly basis.
+                    </li>
+            <li><strong>PAYROLL DATE</strong>
+                        <strong>Stipend will be paid monthly, subject to applicable taxes, duties, cases, and other
+                            statutory deductions, and is typically processed at the end of each month for associates who
+                            have joined before the payroll cut-off.</strong>
+                    </li>
+                    <li><strong>TOTAL REWARDS</strong>
+                    SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per
+                    market standards, including an excellent benefits program comprising health, finance and wealth,
+                    work/life balance, and learning and career benefits.
+                    <br>
+                    <ol type="i">
                         <li><strong>COMPENSATION</strong><br>
                             SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable
                             compensation for every associate. We always value excellence and high performance.
-                        </li><br>
+                        </li>  
                 During your Internship period, you shall be eligible for a stipend of <strong>INR 7000
                                 (Rupees Seven Thousand Only)</strong> on last 3 months.
-                        <li><strong>LEAVE</strong><br>
+                        <li><strong>LEAVE</strong>
                             You will be entitled to 3 Days leave in a calendar year on a monthly accrual basis.
-                        </li><br>
-                        <li><strong>HOLIDAYS</strong><br>
+                        </li>
+                        <li><strong>HOLIDAYS</strong>
                             You shall be eligible for 9 holidays in a calendar year per the published calendar.
                             Associates working out of client locations shall follow the client holiday calendar.
-                        </li><br>
-                        <li><strong>HEALTH AND WELL-BEING</strong><br>
+                        </li>
+                        <li><strong>HEALTH AND WELL-BEING</strong>
                             SIGNAVOX TECHNOLOGIES promotes employee health and wellbeing and helps create positive
                             working environments
                             where individuals and organizations can thrive. We believe good health and wellbeing are
                             core enablers which drive
                             employee engagement and organizational performance.
-                        </li><br>
+                        </li>
                         <li><strong>REWARDS AND RECOGNITION PROGRAMS</strong><br>
                             SIGNAVOX TECHNOLOGIES acknowledges employee contributions, commitment and efforts towards
                             endeavors and achievements. The Company promotes performance and optimistic behaviors
                             through various monetary and non-monetary Rewards and Recognition programs.
-                        </li><br>
-                        <li><strong>CAREER DEVELOPMENT</strong><br>
+                        </li>
+                        <li><strong>CAREER DEVELOPMENT</strong>
                             We are huge advocates for your career development. We will encourage you to move to
                             higher/new roles and reach your potential by frequently helping you to enhance skills or
                             acquire new skills.
                         </li>
                 </li>
-            </ol>
+                </ol>
             </ol>
         </div>
         <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
