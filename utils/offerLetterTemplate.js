@@ -32,7 +32,7 @@ module.exports = (user) => {
       <style>
           @page { size: A4; margin: 0; }
           *, *::before, *::after { box-sizing: border-box; }
-          html, body { height: 100%; }
+          html, body { height: 100%; } 
           body {
               font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
               background: #fff;
