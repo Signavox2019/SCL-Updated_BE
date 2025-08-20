@@ -65,16 +65,17 @@ exports.generateAndUploadOfferLetter = async (user) => {
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: 'load' });
     // Ensure web fonts are fully loaded before PDF snapshot
     await page.evaluate(async () => { if (document.fonts && document.fonts.ready) { await document.fonts.ready; } });
     await page.emulateMediaType('print');
 
     // Ensure consistent page size and background rendering
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      width: '210mm',
+      height: '297mm',
       printBackground: true,
-      margin: { top: '10mm', right: '5mm', bottom: '10mm', left: '5mm' }
+      margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' }
     });
 
     const key = `SCL/OfferLetters/${user.name}_offer_letter.pdf`;

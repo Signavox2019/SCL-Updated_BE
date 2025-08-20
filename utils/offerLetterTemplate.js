@@ -29,13 +29,12 @@ module.exports = (user) => {
       <meta charset="UTF-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
           @page { size: A4; margin: 0; }
           *, *::before, *::after { box-sizing: border-box; }
           html, body { height: 100%; }
           body {
-              font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+              font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
               background: #fff;
               color: #000;
               margin: 0;
@@ -60,15 +59,13 @@ module.exports = (user) => {
           }
   
           .page {
-              width: 100%;
-              max-width: 280mm;
-              min-height: 397mm;
+              width: 210mm;
+              height: 297mm;
               background: #fff;
               position: relative;
               padding: 20mm 5mm 15mm 5mm;
               box-sizing: border-box;
               page-break-after: always;
-              overflow: hidden;
               margin: 0 auto;
           }
   
@@ -96,12 +93,10 @@ module.exports = (user) => {
               font-weight: 500;
               line-height: 1.35;
               width: 100%;
-              height: 100%;
-              min-height: 380mm;
-              max-height: 380mm;
+              height: auto;
               padding-bottom: 25mm; /* ensure content never overlaps footer */
               box-sizing: border-box;
-              overflow: hidden; /* keep overflow within page */
+              overflow: visible;
               word-break: normal;
               overflow-wrap: anywhere;
               hyphens: none;
@@ -119,11 +114,10 @@ module.exports = (user) => {
           }
   
           .footer {
-              position: relative;
+              position: absolute;
               left: 5mm;
               right: 5mm;
-              top: 10mm;
-              bottom: 5mm; /* stick footer near bottom on all pages */
+              bottom: 5mm;
               text-align: center;
               font-size: 20px;
               font-weight: 700;
