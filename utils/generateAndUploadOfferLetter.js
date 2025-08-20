@@ -40,7 +40,8 @@
 
 const template = require('./offerLetterTemplate');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const puppeteer = require('puppeteer');
+const chromium = require('@sparticuz/chromium');
+const puppeteer = require('puppeteer-core');
 
 // Configure S3 client (v3 style)
 const s3Client = new S3Client({
@@ -56,14 +57,10 @@ exports.generateAndUploadOfferLetter = async (user) => {
 
   // Launch headless Chromium; works in most cloud platforms with no-sandbox flags
   const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--font-render-hinting=medium',
-      '--disable-dev-shm-usage'
-    ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath(),
+    headless: chromium.headless,
   });
 
   try {

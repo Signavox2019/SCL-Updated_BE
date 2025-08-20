@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "postinstall": "npx puppeteer browsers install chromium"
+    "postinstall": ""
   },
   "keywords": [],
   "author": "",
@@ -33,7 +33,8 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.3",
     "pdfkit": "^0.17.1",
-    "puppeteer": "^23.7.0",
+    "@sparticuz/chromium": "^129.0.0",
+    "puppeteer-core": "^23.7.0",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.1",
     "streamifier": "^0.1.1"
