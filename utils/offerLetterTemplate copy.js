@@ -214,7 +214,7 @@ module.exports = (user) => {
             </ol>
         </div>
         <div class="footer">
-             Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
+            SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
             500081
         </div>
     </div>
@@ -293,7 +293,7 @@ module.exports = (user) => {
 
                     </ol>
         </div>
-        <div class="footer"> Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
+        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
     </div>
 
@@ -361,7 +361,7 @@ module.exports = (user) => {
                 </ol>
             </ol>
         </div>
-        <div class="footer"> Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
+        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
     </div>
 
