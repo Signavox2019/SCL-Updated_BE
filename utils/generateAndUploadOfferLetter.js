@@ -66,6 +66,9 @@ exports.generateAndUploadOfferLetter = async (user) => {
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Ensure web fonts are fully loaded before PDF snapshot
+    await page.evaluate(async () => { if (document.fonts && document.fonts.ready) { await document.fonts.ready; } });
+    await page.emulateMediaType('print');
 
     // Ensure consistent page size and background rendering
     const pdfBuffer = await page.pdf({

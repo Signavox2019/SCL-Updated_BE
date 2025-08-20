@@ -31,12 +31,17 @@ module.exports = (user) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
       <style>
+          @page { size: A4; margin: 0; }
+          *, *::before, *::after { box-sizing: border-box; }
+          html, body { height: 100%; }
           body {
               font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
               background: #fff;
               color: #000;
               margin: 0;
               padding: 0;
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
           }
           .header-logo {
               position: absolute;
@@ -50,7 +55,7 @@ module.exports = (user) => {
               text-align: center;
               font-size: 24px;
               font-weight: bold;
-              margin-top: 90px; /* pushes below the logo */
+              margin-top: 0;
               margin-bottom: 40px;
           }
   
@@ -89,7 +94,7 @@ module.exports = (user) => {
               z-index: 1;
               font-size: 20px;
               font-weight: 500;
-              line-height: 1.4;
+              line-height: 1.35;
               width: 100%;
               height: 100%;
               min-height: 380mm;
@@ -97,8 +102,9 @@ module.exports = (user) => {
               padding-bottom: 25mm; /* ensure content never overlaps footer */
               box-sizing: border-box;
               overflow: hidden; /* keep overflow within page */
-              word-break: break-word;
-              hyphens: auto;
+              word-break: normal;
+              overflow-wrap: anywhere;
+              hyphens: none;
           }
   
           h1,
@@ -147,6 +153,7 @@ module.exports = (user) => {
               ul li {
                     margin-bottom: 12px; /* extra space between items */
   }
+          .header-spacer { height: 110px; }
       </style>
   </head>
   
@@ -155,6 +162,7 @@ module.exports = (user) => {
       <!-- PAGE 1 -->
       <div class="page">
       <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="Logo" class="header-logo" />
+      <div class="header-spacer"></div>
   
           <div class="content">
           <div class="offer-title">OFFER & APPOINTMENT LETTER</div>
