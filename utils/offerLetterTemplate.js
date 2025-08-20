@@ -29,7 +29,7 @@ module.exports = (user) => {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             background: #fff;
             color: #000;
             margin: 0;
