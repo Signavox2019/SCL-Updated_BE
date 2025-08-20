@@ -1,31 +1,32 @@
 
 module.exports = (user) => {
-  // Helper function to format date (e.g., "Aug 06th 2025")
-  const formatDate = (date) => {
-    if (!date) return '';
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    const daySuffix = (d) => {
-      if (d > 4 && d < 21) return 'th';
-      switch (d % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
+    // Helper function to format date (e.g., "Aug 06th 2025")
+    const formatDate = (date) => {
+        if (!date) return '';
+        const day = date.getDate();
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const year = date.getFullYear();
+        const daySuffix = (d) => {
+            if (d > 4 && d < 21) return 'th';
+            switch (d % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        };
+        return `${month} ${day}${daySuffix(day)} ${year}`;
     };
-    return `${month} ${day}${daySuffix(day)} ${year}`;
-  };
 
-  const currentDate = formatDate(new Date());
-  const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : '';
+    const currentDate = formatDate(new Date());
+    const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : '';
 
-  return `
+    return `
    <!DOCTYPE html>
 <html lang="en">
 
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
