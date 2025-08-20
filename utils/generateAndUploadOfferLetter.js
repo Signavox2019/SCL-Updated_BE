@@ -38,12 +38,9 @@
 
 
 
-const pdf = require('html-pdf');
 const template = require('./offerLetterTemplate');
-const fs = require('fs');
-const path = require('path');
-const mime = require('mime-types');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const puppeteer = require('puppeteer');
 
 // Configure S3 client (v3 style)
 const s3Client = new S3Client({
@@ -54,37 +51,44 @@ const s3Client = new S3Client({
   }
 });
 
-exports.generateAndUploadOfferLetter = (user) => {
-  return new Promise((resolve, reject) => {
-    const html = template(user);
-    const tempFilePath = path.join(__dirname, 'temp_offer.pdf');
+exports.generateAndUploadOfferLetter = async (user) => {
+  const html = template(user);
 
-    pdf.create(html).toFile(tempFilePath, async (err, res) => {
-      if (err) return reject(err);
-
-      try {
-        const fileContent = fs.readFileSync(tempFilePath);
-        const contentType = mime.lookup(tempFilePath) || 'application/pdf';
-
-        const uploadParams = {
-          Bucket: process.env.S3_BUCKET_NAME,
-          Key: `SCL/OfferLetters/${user.name}_offer_letter.pdf`,
-          Body: fileContent,
-          ContentType: contentType
-          // ACL: 'public-read'
-        };
-
-        await s3Client.send(new PutObjectCommand(uploadParams));
-
-        // Clean up local file
-        fs.unlinkSync(tempFilePath);
-
-        const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
-
-        resolve(fileUrl);
-      } catch (uploadErr) {
-        reject(uploadErr);
-      }
-    });
+  // Launch headless Chromium; works in most cloud platforms with no-sandbox flags
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--font-render-hinting=medium',
+      '--disable-dev-shm-usage'
+    ],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
   });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    // Ensure consistent page size and background rendering
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '10mm', right: '5mm', bottom: '10mm', left: '5mm' }
+    });
+
+    const key = `SCL/OfferLetters/${user.name}_offer_letter.pdf`;
+    await s3Client.send(new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+      Body: pdfBuffer,
+      ContentType: 'application/pdf'
+      // ACL: 'public-read'
+    }));
+
+    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    return fileUrl;
+  } finally {
+    await browser.close();
+  }
 };
