@@ -1,81 +1,66 @@
 
-module.exports = (user, assets = {}) => {
-  // Helper function to format date (e.g., "Aug 06th 2025")
-  const formatDate = (date) => {
-    if (!date) return '';
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
-    const year = date.getFullYear();
-    const daySuffix = (d) => {
-      if (d > 4 && d < 21) return 'th';
-      switch (d % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
+module.exports = (user) => {
+    // Helper function to format date (e.g., "Aug 06th 2025")
+    const formatDate = (date) => {
+        if (!date) return '';
+        const day = date.getDate();
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const year = date.getFullYear();
+        const daySuffix = (d) => {
+            if (d > 4 && d < 21) return 'th';
+            switch (d % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        };
+        return `${month} ${day}${daySuffix(day)} ${year}`;
     };
-    return `${month} ${day}${daySuffix(day)} ${year}`;
-  };
 
-  const currentDate = formatDate(new Date());
-  const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : '';
+    const currentDate = formatDate(new Date());
+    const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : '';
 
-  return `
+    return `
    <!DOCTYPE html>
 <html lang="en">
 
 <head>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        @page {
-            size: A4;
-            margin: 15mm 10mm;
-        }
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             background: #fff;
             color: #000;
             margin: 0;
             padding: 0;
         }
         .header-logo {
-            position: static;
-            width: 45mm;
-            height: auto;
-            z-index: 2;
-        }
-        .header {
             position: absolute;
-            top: 10mm;
-            left: 10mm;
-            right: 10mm;
-            display: flex;
-            align-items: center;
-            gap: 8mm;
+            top: 15mm;
+            left: 5mm;
+            width: 300px;
+            height: 70px;
             z-index: 2;
-        }
-        .company-name {
-            font-size: 14pt;
-            font-weight: 800;
-            color: #000;
-            letter-spacing: 0.3px;
         }
         .offer-title {
             text-align: center;
             font-size: 24px;
             font-weight: bold;
-            margin-top: 35mm; /* pushes below the header */
+            margin-top: 90px; /* pushes below the logo */
             margin-bottom: 40px;
         }
 
         .page {
-            width: 210mm; /* A4 width */
-            min-height: 297mm; /* A4 height */
+            width: 100%;
+            max-width: 280mm;
+            min-height: 397mm;
             background: #fff;
             position: relative;
-            padding: 0; /* padding is controlled via @page margins */
+            padding: 20mm 5mm 15mm 5mm;
             box-sizing: border-box;
             page-break-after: always;
+            overflow: hidden;
             margin: 0 auto;
         }
 
@@ -89,8 +74,8 @@ module.exports = (user, assets = {}) => {
             background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
             background-repeat: no-repeat;
             background-position: center center; /* keeps it in the middle */
-            background-size: 800px auto; /* increased width while maintaining aspect ratio */
-            opacity: 0.30; /* keep it slightly lighter for watermark effect */
+            background-size: 600px auto; /* increased width while maintaining aspect ratio */
+            opacity: 0.2; /* keep it slightly lighter for watermark effect */
             z-index: 0;
             pointer-events: none;
         }
@@ -99,35 +84,43 @@ module.exports = (user, assets = {}) => {
         .content {
             position: relative;
             z-index: 1;
-            font-size: 12pt;
+            font-size: 20px;
             font-weight: 500;
             line-height: 1.4;
             width: 100%;
+            height: 100%;
+            min-height: 380mm;
+            max-height: 380mm;
+            padding-bottom: 25mm; /* ensure content never overlaps footer */
             box-sizing: border-box;
-            page-break-inside: auto;
+            overflow: hidden; /* keep overflow within page */
             word-break: break-word;
             hyphens: auto;
         }
 
         h1,
         h2 {
-            font-size: 14pt;
+            font-size: 20px;
             color: #000;
         }
 
         .date-right {
             text-align: right;
-            font-size: 12pt;
+            font-size: 20px;
         }
 
         .footer {
             position: relative;
+            left: 5mm;
+            right: 5mm;
+            top: 10mm;
+            bottom: 5mm; /* stick footer near bottom on all pages */
             text-align: center;
-            font-size: 12pt;
+            font-size: 20px;
             font-weight: 700;
             color: #000;
             border-top: 2px solid #ccc;
-            padding-top: 4px;
+            padding-top: 1px;
             background: #fff;
         }
 
@@ -140,6 +133,9 @@ module.exports = (user, assets = {}) => {
             padding-left: 20px;
         }
 
+        // ol {
+        //     padding-left: 20px;
+        // }
         @media print {
             .page {
                 -webkit-print-color-adjust: exact;
@@ -157,10 +153,7 @@ module.exports = (user, assets = {}) => {
 
     <!-- PAGE 1 -->
     <div class="page">
-    <div class="header">
-        <img src="${assets.companyLogoDataUri || 'https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png'}" alt="Logo" class="header-logo" />
-        <div class="company-name">SIGNAVOX TECHNOLOGIES PRIVATE LIMITED</div>
-    </div>
+    <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="Logo" class="header-logo" />
 
         <div class="content">
         <div class="offer-title">OFFER & APPOINTMENT LETTER</div>
@@ -222,7 +215,7 @@ module.exports = (user, assets = {}) => {
             </ol>
         </div>
         <div class="footer">
-            SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
+             Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
             500081
         </div>
     </div>
@@ -301,7 +294,7 @@ module.exports = (user, assets = {}) => {
 
                     </ol>
         </div>
-        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
+        <div class="footer"> Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
     </div>
 
@@ -369,7 +362,7 @@ module.exports = (user, assets = {}) => {
                 </ol>
             </ol>
         </div>
-        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
+        <div class="footer"> Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
             Telangana, India, 500081</div>
     </div>
 
