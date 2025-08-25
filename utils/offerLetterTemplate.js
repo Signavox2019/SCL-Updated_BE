@@ -27,24 +27,18 @@ module.exports = (user) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offer Letter</title>
-    <!-- Use Google Fonts for consistent rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         @page {
             size: A4;
-            margin: 18mm 22mm;
+            margin: 0;
         }
-        @font-face {
-            font-family: 'Inter';
-            src: url('Inter-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
         body, .page, .content, .header, .offer-title, .date-section, .numbered-list, .sub-list, .footer {
-            font-family: 'Inter', 'Times New Roman', Arial, sans-serif !important;
+            font-family: 'Times New Roman', Arial, sans-serif !important;
         }
+        p, ol, ul { margin: 0 0 10px 0; }
         body {
-            font-size: 15pt;
+            font-size: 13pt;
             line-height: 1.5;
             color: #000;
             margin: 0;
@@ -52,7 +46,7 @@ module.exports = (user) => {
             background: #fff;
         }
         .page {
-            width: 100%;
+            width: 210mm;
             min-height: 297mm;
             background: #fff;
             background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
@@ -61,11 +55,11 @@ module.exports = (user) => {
             background-size: 100% 100%, 70% auto;
             position: relative;
             margin: 0 auto;
-            padding: 0;
+            padding: 18mm 22mm 26mm 22mm;
             box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
+            page-break-after: always;
         }
+        .page:last-child { page-break-after: auto; }
         .header {
             display: flex;
             align-items: center;
@@ -101,24 +95,29 @@ module.exports = (user) => {
             flex-shrink: 0;
         }
         .content {
-            flex: 1;
             text-align: justify;
             margin: 6px 0 10px 0;
-            padding-bottom: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+            padding-bottom: 24mm; /* leave space for pdf footer */
             position: relative;
             z-index: 1;
         }
         .numbered-list, .sub-list {
-            padding-left: 0;
-            list-style-position: inside;
+            margin: 0 0 10px 0;
+            padding-left: 18px;
+            list-style-position: outside;
         }
         .numbered-list li, .sub-list li {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             text-align: justify;
         }
+        table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
+        .annexure-table th.annexure-right, .annexure-table td.annexure-right { text-align: right; }
+        .annexure-title { font-weight: bold; font-size: 16pt; margin: 10px 0; text-align: center; }
+        .annexure-intro { margin: 8px 0 12px 0; }
+        .annexure-highlight td { font-weight: bold; }
+        .bold { font-weight: bold; }
         .footer {
             text-align: center;
             font-size: 16pt;
@@ -131,7 +130,7 @@ module.exports = (user) => {
             body, .page, .content, .header, .offer-title, .date-section, .numbered-list, .sub-list, .footer {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                font-family: 'Inter', 'Times New Roman', Arial, sans-serif !important;
+                font-family: 'Times New Roman', Arial, sans-serif !important;
             }
         }
     </style>
