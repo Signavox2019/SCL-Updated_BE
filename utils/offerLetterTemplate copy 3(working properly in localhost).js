@@ -1,3 +1,4 @@
+
 module.exports = (user) => {
   // Helper function to format date (e.g., "Aug 20th 2025")
   const formatDate = (date) => {
@@ -27,17 +28,14 @@ module.exports = (user) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offer Letter</title>
-    <!-- Use Google Fonts for consistent rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         @page {
             size: A4;
-            margin: 18mm 22mm;
+            margin: 18mm 22mm; /* increase left/right spacing */
         }
-        body, .page, .content, .header, .offer-title, .date-section, .numbered-list, .sub-list, .footer {
-            font-family: 'Inter', 'Times New Roman', Arial, sans-serif !important;
-        }
+        
         body {
+            font-family: 'Times New Roman', serif;
             font-size: 15pt;
             line-height: 1.5;
             color: #000;
@@ -45,10 +43,12 @@ module.exports = (user) => {
             padding: 0;
             background: #fff;
         }
+        
         .page {
             width: 100%;
-            min-height: 297mm;
+            min-height: 297mm; /* ensure full page height for proper watermark centering */
             background: #fff;
+            /* Layer 1: faint white overlay to reduce watermark intensity; Layer 2: watermark */
             background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
             background-repeat: no-repeat, no-repeat;
             background-position: center center, center center;
@@ -60,6 +60,14 @@ module.exports = (user) => {
             display: flex;
             flex-direction: column;
         }
+        /* Watermark per page (use element, not pseudo, for better PDF support) */
+        .wm { display: none; }
+        /* Add page-break only between pages, not after the last one */
+        /* Add page-break only between pages, not after the last one */
+        .page:not(:last-of-type) {
+            page-break-after: always;
+        }
+        
         .header {
             display: flex;
             align-items: center;
@@ -72,10 +80,17 @@ module.exports = (user) => {
             position: relative;
             z-index: 1;
         }
+        
         .company-logo {
             width: 260px;
             height: auto;
         }
+        .company-name {
+            font-size: 14pt;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+        
         .offer-title {
             font-size: 22pt;
             font-weight: bold;
@@ -86,6 +101,7 @@ module.exports = (user) => {
             position: relative;
             z-index: 1;
         }
+        
         .date-section {
             text-align: right;
             margin: 10px 0 6px 0;
@@ -94,6 +110,7 @@ module.exports = (user) => {
             z-index: 1;
             flex-shrink: 0;
         }
+        
         .content {
             flex: 1;
             text-align: justify;
@@ -105,27 +122,100 @@ module.exports = (user) => {
             position: relative;
             z-index: 1;
         }
-        .numbered-list, .sub-list {
-            padding-left: 0;
-            list-style-position: inside;
+        
+        .greeting {
+            margin: 6px 0;
         }
-        .numbered-list li, .sub-list li {
+        
+        .main-content {
+            margin: 6px 0;
+            flex: 1;
+        }
+        
+        .numbered-list {
+            margin: 6px 0;
+            padding-left: 0;
+            list-style-position: inside; /* ensure numbers are inside the content box */
+        }
+        
+        .numbered-list li {
             margin-bottom: 12px;
             text-align: justify;
         }
-        .footer {
-            text-align: center;
-            font-size: 16pt;
-            font-weight: bold;
-            border-top: 2px solid #000;
-            padding-top: 2mm;
-            background: #fff;
+        
+        .sub-list {
+            margin: 6px 0;
+            padding-left: 0;
+            list-style-position: inside; /* prevent clipping for nested roman numerals */
         }
+        
+        .sub-list li {
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+        
+        .bold {
+            font-weight: bold;
+        }
+        
+        .footer { display: none; }
+
+        /* Annexure A styles */
+        .annexure-title {
+            text-align: center;
+            font-weight: bold;
+            margin: 6mm 0 3mm 0;
+            font-size: 15pt;
+        }
+        .annexure-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15pt; /* match other pages */
+            z-index: 1;
+        }
+        .annexure-table th,
+        .annexure-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+        .annexure-table th {
+            text-align: left;
+        }
+        .annexure-right {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .annexure-highlight {
+            background: #d8f3dc; /* light green similar to screenshot */
+            font-weight: bold;
+        }
+        .annexure-notes {
+            margin-top: 6px;
+            font-size: 15pt; /* match table font size */
+            line-height: 1.5;
+        }
+        .annexure-intro {
+            font-size: 15pt;
+            margin: 4mm 0 6mm 0;
+        }
+        .annexure-signature {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr; /* give more width to right side */
+            gap: 20mm; /* more separation for writing space */
+            align-items: start;
+            margin-top: 14mm;
+            font-size: 15pt; /* match table font size */
+        }
+        .annexure-signature .label { font-weight: bold; }
+        .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; }
+        .annexure-signature .right-sec { text-align: right; justify-self: end; width: 180mm; }
+        .sig-field { margin-top: 6mm; }
+        
         @media print {
-            body, .page, .content, .header, .offer-title, .date-section, .numbered-list, .sub-list, .footer {
+            .page {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                font-family: 'Inter', 'Times New Roman', Arial, sans-serif !important;
             }
         }
     </style>
