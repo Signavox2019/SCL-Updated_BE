@@ -34,6 +34,12 @@ module.exports = (user) => {
             size: A4;
             margin: 18mm 22mm;
         }
+        @font-face {
+            font-family: 'Inter';
+            src: url('Inter-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
         body, .page, .content, .header, .offer-title, .date-section, .numbered-list, .sub-list, .footer {
             font-family: 'Inter', 'Times New Roman', Arial, sans-serif !important;
         }
@@ -77,9 +83,9 @@ module.exports = (user) => {
             height: auto;
         }
         .offer-title {
+            text-align: center;
             font-size: 22pt;
             font-weight: bold;
-            text-align: center;
             margin: 8px 0 4px 0;
             text-transform: uppercase;
             letter-spacing: 1px;
