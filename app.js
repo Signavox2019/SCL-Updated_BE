@@ -14,23 +14,25 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 // app.use(cors({ origin: true, credentials: true }));
-const allowedOrigins = [
-  'http://localhost:5173', 
-  'https://your-frontend-domain.com'
-];
+// const allowedOrigins = [
+//   'http://localhost:5173', 
+//   'https://your-frontend-domain.com'
+// ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed for this origin'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('CORS not allowed for this origin'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true
+// }));
+
+app.use(cors({ origin: true, credentials: true }));
 
 
 app.use(morgan('dev'));
