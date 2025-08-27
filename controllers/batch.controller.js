@@ -835,6 +835,9 @@ exports.updateBatch = async (req, res) => {
     let batch = await Batch.findById(id);
     if (!batch) return res.status(404).json({ message: '❌ Batch not found' });
 
+    // Store old users for comparison
+    const oldUsers = batch.users.map(u => u.toString());
+
     // Update fields
     batch.batchName = batchName || batch.batchName;
     batch.course = course || batch.course;

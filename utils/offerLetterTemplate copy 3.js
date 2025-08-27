@@ -24,14 +24,14 @@ module.exports = (user) => {
     return `
   <!DOCTYPE html>
   <html lang="en">
- <head>
+  <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Offer Letter</title>
       <style>
           @page {
               size: A4;
-              margin: 18mm 22mm;
+              margin: 18mm 22mm; /* increase left/right spacing */
           }
           
           body {
@@ -46,35 +46,24 @@ module.exports = (user) => {
           
           .page {
               width: 100%;
-              min-height: 297mm;
+              min-height: 297mm; /* ensure full page height for proper watermark centering */
               background: #fff;
-              /* ✅ Only watermark kept, background box removed */
-              background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
-              background-repeat: no-repeat;
-              background-position: center center;
-              background-size: 70% auto;
+              /* Layer 1: faint white overlay to reduce watermark intensity; Layer 2: watermark */
+              background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
+              background-repeat: no-repeat, no-repeat;
+              background-position: center center, center center;
+              background-size: 100% 100%, 70% auto;
               position: relative;
               margin: 0 auto;
               padding: 0;
+              box-sizing: border-box;
               display: flex;
               flex-direction: column;
           }
-
-          /* Subtle overlay to reduce watermark thickness (opacity) */
-          .page::after {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: rgba(255,255,255,0.7);
-              z-index: 0;
-              pointer-events: none;
-          }
-
+          /* Watermark per page (use element, not pseudo, for better PDF support) */
           .wm { display: none; }
-
+          /* Add page-break only between pages, not after the last one */
+          /* Add page-break only between pages, not after the last one */
           .page:not(:last-of-type) {
               page-break-after: always;
           }
@@ -96,7 +85,12 @@ module.exports = (user) => {
               width: 260px;
               height: auto;
           }
-
+          .company-name {
+              font-size: 14pt;
+              font-weight: 800;
+              letter-spacing: 0.3px;
+          }
+          
           .offer-title {
               font-size: 22pt;
               font-weight: bold;
@@ -121,6 +115,7 @@ module.exports = (user) => {
               flex: 1;
               text-align: justify;
               margin: 6px 0 10px 0;
+              padding-bottom: 0;
               display: flex;
               flex-direction: column;
               justify-content: flex-start;
@@ -128,13 +123,19 @@ module.exports = (user) => {
               z-index: 1;
           }
           
-          .greeting { margin: 6px 0; }
-          .main-content { margin: 6px 0; flex: 1; }
-
+          .greeting {
+              margin: 6px 0;
+          }
+          
+          .main-content {
+              margin: 6px 0;
+              flex: 1;
+          }
+          
           .numbered-list {
               margin: 6px 0;
               padding-left: 0;
-              list-style-position: inside;
+              list-style-position: inside; /* ensure numbers are inside the content box */
           }
           
           .numbered-list li {
@@ -145,7 +146,7 @@ module.exports = (user) => {
           .sub-list {
               margin: 6px 0;
               padding-left: 0;
-              list-style-position: inside;
+              list-style-position: inside; /* prevent clipping for nested roman numerals */
           }
           
           .sub-list li {
@@ -153,9 +154,12 @@ module.exports = (user) => {
               text-align: justify;
           }
           
-          .bold { font-weight: bold; }
-          .footer { text-align: center; position: absolute; bottom: 0mm; left: 0; right: 0; z-index: 1; }
-
+          .bold {
+              font-weight: bold;
+          }
+          
+          .footer { display: none; }
+  
           /* Annexure A styles */
           .annexure-title {
               text-align: center;
@@ -166,7 +170,7 @@ module.exports = (user) => {
           .annexure-table {
               width: 100%;
               border-collapse: collapse;
-              font-size: 15pt;
+              font-size: 15pt; /* match other pages */
               z-index: 1;
           }
           .annexure-table th,
@@ -175,12 +179,20 @@ module.exports = (user) => {
               padding: 6px 8px;
               vertical-align: middle;
           }
-          .annexure-table th { text-align: left; }
-          .annexure-right { text-align: right; white-space: nowrap; }
-          .annexure-highlight { background: #d8f3dc; font-weight: bold; }
+          .annexure-table th {
+              text-align: left;
+          }
+          .annexure-right {
+              text-align: right;
+              white-space: nowrap;
+          }
+          .annexure-highlight {
+              background: #d8f3dc; /* light green similar to screenshot */
+              font-weight: bold;
+          }
           .annexure-notes {
               margin-top: 6px;
-              font-size: 15pt;
+              font-size: 15pt; /* match table font size */
               line-height: 1.5;
           }
           .annexure-intro {
@@ -189,16 +201,16 @@ module.exports = (user) => {
           }
           .annexure-signature {
               display: grid;
-              grid-template-columns: 1fr 1.2fr;
-              gap: 20mm;
+              grid-template-columns: 1fr 1.2fr; /* give more width to right side */
+              gap: 20mm; /* more separation for writing space */
               align-items: start;
-              margin-top: 2mm;
-              font-size: 15pt;
+              margin-top: 14mm;
+              font-size: 15pt; /* match table font size */
           }
           .annexure-signature .label { font-weight: bold; }
           .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; }
           .annexure-signature .right-sec { text-align: right; justify-self: end; width: 180mm; }
-          .sig-field { margin-top: 0mm; }
+          .sig-field { margin-top: 6mm; }
           
           @media print {
               .page {
@@ -266,7 +278,6 @@ module.exports = (user) => {
                   </ol>
               </div>
           </div>
-          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>
       
       <div class="page">
@@ -295,9 +306,13 @@ module.exports = (user) => {
                   <li><strong>PERSONAL INFORMATION (PI)</strong><br>
                       During the process of your employment with Signavox Technologies you may provide or confirm the confidential data or any information that is related to you personally, including without limitation to your email, contact details, taxation, family records, medical records (PI). You confirm that Signavox Technologies may collect use, transfer, store or process such PI as per SIGNAVOX TECHNOLOGIES policies, for Signavox Technologies benefits, Background verifications, financial and accounting aspects and for risk management purposes.
                   </li>
+                  
+                  
+                  
+                  
+                 
               </ol>
           </div>
-          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>
       <div class="page">
           <div class="wm"></div>
@@ -338,7 +353,6 @@ module.exports = (user) => {
                       </ol>
                       </ol>
           </div>
-          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>  
       
       <!-- Annexure A Page -->
@@ -431,7 +445,6 @@ module.exports = (user) => {
                   </div>
               </div>
           </div>
-          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>
   </body>
   </html>
