@@ -3,9 +3,8 @@ const mongoose = require('mongoose');
 const installmentSchema = new mongoose.Schema({
   amountPaid: { type: Number, required: true },
   dateOfPayment: { type: Date, default: Date.now },
-  referenceId: { type: String, required: true, unique: true }, // Admin-entered payment reference ID
+  referenceId: { type: String, required: true }, // Admin-entered payment reference ID
   paymentSnapshot: { type: String }, // URL of payment proof (image/pdf uploaded to Cloudinary/S3)
-  description: { type: String } // Optional notes about the payment
 });
 
 const userSchema = new mongoose.Schema({
@@ -102,14 +101,13 @@ userSchema.pre('save', function (next) {
 
   if (this.amount) {
     this.amount.finalAmount = Math.max(this.amount.courseAmount - (this.amount.courseAmount * this.amount.discount / 100), 0);
-    this.amount.totalPaid = this.amount.installments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0);
-    this.amount.balanceAmount = Math.max((this.amount.finalAmount || 0) - (this.amount.totalPaid || 0), 0);
+    this.amount.balanceAmount = Math.max((this.amount.finalAmount || 0) - (this.amount.paidAmount || 0), 0);
   }
 
   next();
 });
 
-// Auto update on updateOne/findOneAndUpdate
+// Auto update name and amounts on findOneAndUpdate / updateOne
 userSchema.pre(['findOneAndUpdate', 'updateOne'], function (next) {
   const update = this.getUpdate();
 
@@ -123,18 +121,17 @@ userSchema.pre(['findOneAndUpdate', 'updateOne'], function (next) {
   if (update.amount) {
     const courseAmount = update.amount.courseAmount ?? 0;
     const discount = update.amount.discount ?? 0;
+    const paidAmount = update.amount.paidAmount ?? 0;
+
     update.amount.finalAmount = Math.max(courseAmount - (courseAmount * discount / 100), 0);
+    // console.log('Final Amount:', update.amount.finalAmount);
+    // console.log('Paid Amount:', paidAmount);
 
-    if (update.amount.installments) {
-      update.amount.totalPaid = update.amount.installments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0);
-    }
-
-    update.amount.balanceAmount = Math.max((update.amount.finalAmount || 0) - (update.amount.totalPaid || 0), 0);
+    update.amount.balanceAmount = Math.max(update.amount.finalAmount - paidAmount, 0);
   }
 
   this.setUpdate(update);
   next();
 });
-
 
 module.exports = mongoose.model('User', userSchema);

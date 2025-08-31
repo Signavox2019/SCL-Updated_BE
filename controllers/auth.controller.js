@@ -118,11 +118,181 @@ const transporter = nodemailer.createTransport({
 
 // ✅ Login
 
+// exports.register = async (req, res) => {
+//   try {
+//     const {
+//       title,              // Optional: e.g. Mr., Ms., Dr.
+//       // Personal Details
+//       firstName,
+//       middleName,
+//       lastName,
+//       email,
+//       phone,
+//       role = 'intern',
+//       profilePhoto,
+
+//       // Education Info
+//       collegeName,
+//       department,
+//       university,
+//       degree,
+//       specialization,
+//       cgpa,
+//       currentYear,
+//       isGraduated,
+//       yearOfPassing,
+
+//       // Work Experience
+//       hasExperience,
+//       previousCompany,
+//       position,
+//       yearsOfExperience,
+
+//       // Organization & Employment Details
+//       organizationName,
+//       offerLetter,
+//       placeOfWork,
+//       reportingDate,
+//       shiftTimings,         // Example: { start: "09:00", end: "17:00" }
+//       workingDays,          // Example: ["Monday", "Tuesday", "Wednesday"]
+//       hrName,
+//       employeeAddress,
+//       stipend,
+//       amount = {
+//         courseAmount: 0,
+//         paidAmount: 0,
+//         balanceAmount: 0
+//       }
+//     } = req.body;
+
+//     // Check if user already exists
+//     const existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ message: "User already exists" });
+
+//     // Generate password and hash
+//     const generatedPassword = crypto.randomBytes(6).toString('hex'); // 12-character
+//     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+
+//     // Generate full name
+//     const name = [firstName, middleName, lastName].filter(Boolean).join(' ');
+
+//     // Create new user
+//     const user = await User.create({
+//       title,
+//       firstName,
+//       middleName,
+//       lastName,
+//       name,
+//       email,
+//       phone,
+//       role,
+//       password: hashedPassword,
+//       generatedPassword,
+//       profilePhoto,
+
+//       // Education
+//       collegeName,
+//       department,
+//       university,
+//       degree,
+//       specialization,
+//       cgpa,
+//       currentYear,
+//       isGraduated,
+//       yearOfPassing,
+
+//       // Experience
+//       hasExperience,
+//       previousCompany,
+//       position,
+//       yearsOfExperience,
+
+//       // Organization
+//       organizationName,
+//       offerLetter,
+//       placeOfWork,
+//       reportingDate,
+//       shiftTimings,
+//       workingDays,
+//       hrName,
+//       employeeAddress,
+//       stipend,
+
+//       approveStatus: 'waiting',
+//       certificates: [],
+//       // courseRegisteredFor: null, // Initially null
+//       amount: {
+//         courseAmount: amount.courseAmount || 0,
+//         discount: amount.discount || 0,
+//         paidAmount: amount.paidAmount || 0,
+//       }
+//     });
+
+//     // Send confirmation email
+//     await transporter.sendMail({
+//       from: process.env.EMAIL_USER,
+//       to: email,
+//       subject: "📩 Registration Received | Signavox Career Ladder",
+//       html: `
+// <div style="font-family: Arial, sans-serif; color: #333; font-size: 15px; line-height: 1.6;">
+//         <p>Dear ${name},</p>
+
+//         <p>Greetings from <strong>Signavox Technologies Private Limited</strong>!</p>
+//         <p>Further to our recent communication, we are pleased to confirm that your application has been shortlisted for
+//             the <strong>Signavox Career Ladder Internship Program</strong>. Based on your stated domain preference, a
+//             slot has been successfully allocated in the corresponding specialization area.</p>
+
+//         <p>As part of the onboarding process, you will shortly receive further instructions regarding the <strong>submission of
+//             required documents.</strong> This communication serves as the official confirmation of your enrollment process.</p>
+
+//         <p>To formally confirm your participation in the upcoming cohort, you are requested to complete the program fee
+//             payment as per the details outlined below:</p>
+
+//         <h3 style="margin-top: 20px;">Payment Information</h3>
+//         <ul>
+//             <li><strong>Program Fee:</strong> ₹1,00,000 /-</li>
+//             <li><strong>Company Name:</strong> Signavox Technologies Private Limited</li>
+//             <li><strong>Bank Account Number:</strong> 053311010000075</li>
+//             <li><strong>IFSC Code:</strong> UBIN0805335</li>
+//         </ul>
+
+//         <div style="border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; margin-top: 20px;">
+//             <p style="margin: 0;"><strong>Note:</strong> Once the payment is completed, kindly share the transaction
+//                 reference number or a screenshot of the confirmation for our records.</p>
+//         </div>
+
+//         <p style="margin-top: 20px;">In alignment with our sustainability initiatives, all official communication and
+//             documentation will be shared electronically.</p>
+
+//         <p>Once again,<span style="background-color: #e0f7fa; font-weight: bold;">Congratulations</span> on your referral. We look
+//             forward to having you onboard and supporting your growth with Signavox.</p>
+
+//         <p style="margin-top: 30px;"><strong>Thanks & Regards,</strong><br />
+//             <strong>Talent Acquisition Team</strong><br />
+//             <strong>Signavox Technologies Pvt. Ltd.</strong>
+//         </p>
+//         <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="signavox" height="50" width="270">
+//     </div>
+
+//       `
+//     });
+
+//     res.status(201).json({
+//       message: "Registration successful. Awaiting admin approval.",
+//       user,
+//     });
+
+//   } catch (error) {
+//     console.error("Registration Error:", error);
+//     res.status(500).json({ message: "Registration failed", error });
+//   }
+// };
+
+
 exports.register = async (req, res) => {
   try {
     const {
       title,              // Optional: e.g. Mr., Ms., Dr.
-      // Personal Details
       firstName,
       middleName,
       lastName,
@@ -153,8 +323,8 @@ exports.register = async (req, res) => {
       offerLetter,
       placeOfWork,
       reportingDate,
-      shiftTimings,         // Example: { start: "09:00", end: "17:00" }
-      workingDays,          // Example: ["Monday", "Tuesday", "Wednesday"]
+      shiftTimings,
+      workingDays,
       hrName,
       employeeAddress,
       stipend,
@@ -220,7 +390,6 @@ exports.register = async (req, res) => {
 
       approveStatus: 'waiting',
       certificates: [],
-      // courseRegisteredFor: null, // Initially null
       amount: {
         courseAmount: amount.courseAmount || 0,
         discount: amount.discount || 0,
@@ -228,52 +397,43 @@ exports.register = async (req, res) => {
       }
     });
 
-    // Send confirmation email
+    // ✅ Registration Received Email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "📩 Registration Received | Signavox Career Ladder",
       html: `
-<div style="font-family: Arial, sans-serif; color: #333; font-size: 15px; line-height: 1.6;">
-        <p>Dear ${name},</p>
- 
-        <p>Greetings from <strong>Signavox Technologies Private Limited</strong>!</p>
-        <p>Further to our recent communication, we are pleased to confirm that your application has been shortlisted for
-            the <strong>Signavox Career Ladder Internship Program</strong>. Based on your stated domain preference, a
-            slot has been successfully allocated in the corresponding specialization area.</p>
- 
-        <p>As part of the onboarding process, you will shortly receive further instructions regarding the <strong>submission of
-            required documents.</strong> This communication serves as the official confirmation of your enrollment process.</p>
- 
-        <p>To formally confirm your participation in the upcoming cohort, you are requested to complete the program fee
-            payment as per the details outlined below:</p>
- 
-        <h3 style="margin-top: 20px;">Payment Information</h3>
-        <ul>
-            <li><strong>Program Fee:</strong> ₹1,00,000 /-</li>
-            <li><strong>Company Name:</strong> Signavox Technologies Private Limited</li>
-            <li><strong>Bank Account Number:</strong> 053311010000075</li>
-            <li><strong>IFSC Code:</strong> UBIN0805335</li>
-        </ul>
- 
-        <div style="border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; margin-top: 20px;">
-            <p style="margin: 0;"><strong>Note:</strong> Once the payment is completed, kindly share the transaction
-                reference number or a screenshot of the confirmation for our records.</p>
-        </div>
- 
-        <p style="margin-top: 20px;">In alignment with our sustainability initiatives, all official communication and
-            documentation will be shared electronically.</p>
- 
-        <p>Once again,<span style="background-color: #e0f7fa; font-weight: bold;">Congratulations</span> on your referral. We look
-            forward to having you onboard and supporting your growth with Signavox.</p>
- 
-        <p style="margin-top: 30px;"><strong>Thanks & Regards,</strong><br />
-            <strong>Talent Acquisition Team</strong><br />
-            <strong>Signavox Technologies Pvt. Ltd.</strong>
-        </p>
-        <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="signavox" height="50" width="270">
-    </div>
+      <div style="font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 40px;">
+        <div style="max-width: 620px; margin: auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); overflow: hidden;">
+          
+          <!-- Header Banner -->
+          <div style="background-color: #ffffff;">
+            <img src="https://res.cloudinary.com/dse4pdvw5/image/upload/v1753878636/MacBook_Air_-_1_1_1_dcjrnt.png" alt="Signavox Banner" style="width: 100%; max-height: 180px; object-fit: cover; display: block;" />
+          </div>
 
+          <!-- Body Content -->
+          <div style="padding: 32px;">
+            
+              <h2 style="color: #2E86DE; margin-bottom: 10px; text-align:center">Registration Received ✅</h2>
+              <div style="text-align: start;">
+              <p style="font-size: 16px; color: #333333; margin: 8px 0;">Hello <strong>${name}</strong>,</p>
+              <p style="font-size: 16px; color: #444444;">Thank you for registering for <strong>Signavox Career Ladder</strong>. We have received your application and it is currently under review.</p>
+              <p style="font-size: 15px; color: #666;">Once approved by our admin team, you will receive an email with your login credentials to access the platform.</p>
+            </div>
+
+            <!-- Divider -->
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 28px 0;">
+
+            <!-- Footer (Same as Approved Template) -->
+            <div style="font-size: 13px; color: #555555; text-align: center; line-height: 1.6;">
+              <p style="margin-top:6px;">Need help? Reach out at 
+                <a href="mailto:support.scl@signavoxtechnologies.com" style="color: #2E86DE; text-decoration: none;">support.scl@signavoxtechnologies.com</a>
+              </p>
+              <p style="margin-top:6px;">&copy; ${new Date().getFullYear()} Signavox Technologies. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       `
     });
 
@@ -287,7 +447,6 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Registration failed", error });
   }
 };
-
 
 
 // exports.register = async (req, res) => {

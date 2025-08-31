@@ -2,15 +2,6 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 const { protect, allowRoles } = require('../middleware/auth.middleware');
-const multer = require('multer');
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-// Installments CRUD (admin only)
-router.post('/:userId/installments', protect, allowRoles('admin'), upload.single('paymentSnapshot'), userController.addInstallment);
-router.put('/:userId/installments/:installmentId', protect, allowRoles('admin'), upload.single('paymentSnapshot'), userController.updateInstallment);
-router.delete('/:userId/installments/:installmentId', protect, allowRoles('admin'), userController.deleteInstallment);
-router.get('/:userId/installments', protect, allowRoles('admin', 'support'), userController.getInstallments);
 
 // Logged-in user's own profile
 router.get('/me', protect, userController.getOwnProfile);

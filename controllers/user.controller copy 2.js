@@ -3,11 +3,6 @@ const Professor = require('../models/Professor');
 const { generateAndUploadOfferLetter } = require('../utils/generateAndUploadOfferLetter');
 const nodemailer = require('nodemailer');
 
-const uploadToS3 = require('../utils/uploadToS3');
-const multer = require('multer');
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
 // Nodemailer transporter setup (make sure you’ve already done this)
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,           // smtp.office365.com
@@ -22,204 +17,6 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false // optional but may help for dev
   }
 });
-
-
-
-
-
-
-// ✅ Add Installment (Admin)
-// exports.addInstallment = async (req, res) => {
-//   try {
-//     const userId = req.params.userId;
-//     const { amountPaid, dateOfPayment, referenceId, description } = req.body;
-
-//     if (!req.file) return res.status(400).json({ message: "Payment snapshot is required" });
-
-//     const paymentSnapshot = await uploadToS3(req.file);
-
-//     const user = await User.findById(userId);
-//     if (!user) return res.status(404).json({ message: 'User not found' });
-
-//     // Push installment
-//     user.amount.installments.push({
-//       amountPaid,
-//       dateOfPayment: dateOfPayment || new Date(),
-//       referenceId,
-//       paymentSnapshot,
-//       description
-//     });
-
-//     // Save user
-//     await user.save();
-
-//     // Get the last installment (this will have _id)
-//     const lastInstallment = user.amount.installments.at(-1); // or [user.amount.installments.length - 1]
-
-//     res.status(200).json({
-//       message: 'Installment added successfully',
-//       installment: lastInstallment
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({ message: 'Failed to add installment', error });
-//   }
-// };
-
-
-// ✅ Add Installment (Admin)
-exports.addInstallment = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { amountPaid, dateOfPayment, referenceId, description } = req.body;
-
-    let paymentSnapshot = null;
-    if (req.file) {
-      paymentSnapshot = await uploadToS3(req.file);
-    }
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Check uniqueness of referenceId
-    const isDuplicate = user.amount.installments.some(
-      inst => inst.referenceId === referenceId
-    );
-    if (isDuplicate) {
-      return res.status(400).json({ message: 'Reference ID must be unique' });
-    }
-
-    // Create new installment object
-    const newInstallment = {
-      amountPaid,
-      dateOfPayment: dateOfPayment || new Date(),
-      referenceId,
-      paymentSnapshot, // optional
-      description
-    };
-
-    // Push and save
-    user.amount.installments.push(newInstallment);
-    await user.save();
-
-    // Return only the newly created installment
-    res.status(201).json({
-      message: "Installment added successfully",
-      installment: newInstallment
-    });
-  } catch (error) {
-    console.error("Add installment error:", error);
-    res.status(500).json({ message: "Failed to add installment", error });
-  }
-};
-
-
-
-
-
-
-// ✅ Update Installment (Admin)
-exports.updateInstallment = async (req, res) => {
-  try {
-    const { userId, installmentId } = req.params;
-    const updates = req.body;
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const installment = user.amount.installments.id(installmentId);
-    if (!installment) return res.status(404).json({ message: 'Installment not found' });
-
-    Object.assign(installment, updates);
-
-    if (req.file) {
-      installment.paymentSnapshot = await uploadToS3(req.file);
-    }
-
-    // Recalculate totals
-    user.amount.totalPaid = user.amount.installments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0);
-    user.amount.balanceAmount = Math.max(user.amount.finalAmount - user.amount.totalPaid, 0);
-
-    await user.save();
-    res.status(200).json({ message: 'Installment updated', installment });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to update installment', error });
-  }
-};
-
-// ✅ Delete Installment (Admin)
-exports.deleteInstallment = async (req, res) => {
-  try {
-    const { userId, installmentId } = req.params;
-
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Remove the installment
-    const initialLength = user.amount.installments.length;
-    user.amount.installments = user.amount.installments.filter(
-      inst => inst._id.toString() !== installmentId
-    );
-
-    if (user.amount.installments.length === initialLength) {
-      return res.status(404).json({ message: 'Installment not found' });
-    }
-
-    // Recalculate totals
-    user.amount.totalPaid = user.amount.installments.reduce((sum, inst) => sum + (inst.amountPaid || 0), 0);
-    user.amount.balanceAmount = Math.max(user.amount.finalAmount - user.amount.totalPaid, 0);
-
-    await user.save();
-
-    res.status(200).json({ message: 'Installment deleted successfully' });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete installment', error });
-  }
-};
-
-
-// ✅ Get Installments (Admin)
-exports.getInstallments = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.userId).select(
-      "name email phone amount"
-    );
-
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.status(200).json({
-      message: "Installments fetched successfully",
-      userDetails: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone
-      },
-      amountDetails: user.amount,
-      installments: user.amount.installments
-    });
-  } catch (error) {
-    console.error("Get installments error:", error);
-    res.status(500).json({ message: "Failed to fetch installments", error });
-  }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ✅ Get all users (Admin)
 exports.getAllUsers = async (req, res) => {
@@ -421,12 +218,7 @@ exports.getWaitingUsers = async (req, res) => {
 exports.updateUserByAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    let updates = { ...req.body };
-
-    // ❌ Prevent installments from being overwritten
-    if (updates.amount && updates.amount.installments) {
-      delete updates.amount.installments;
-    }
+    const updates = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(id, updates, {
       new: true,
@@ -442,11 +234,10 @@ exports.updateUserByAdmin = async (req, res) => {
       user: updatedUser
     });
   } catch (error) {
-    console.error('Error updating user by admin:', error);
     res.status(500).json({ message: 'Error updating user by admin', error });
+    // console.error('Error updating user by admin:', error);
   }
 };
-
 
 
 
@@ -521,7 +312,7 @@ exports.getOwnProfile = async (req, res) => {
 
 exports.generateOfferLetter = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.params.userId; 
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });

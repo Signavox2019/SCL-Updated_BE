@@ -2,25 +2,25 @@
 module.exports = (user) => {
     // Helper function to format date (e.g., "Aug 20th 2025")
     const formatDate = (date) => {
-      if (!date) return '';
-      const day = date.getDate();
-      const month = date.toLocaleString('en-US', { month: 'short' });
-      const year = date.getFullYear();
-      const daySuffix = (d) => {
-        if (d > 4 && d < 21) return 'th';
-        switch (d % 10) {
-          case 1: return 'st';
-          case 2: return 'nd';
-          case 3: return 'rd';
-          default: return 'th';
-        }
-      };
-      return `${month} ${day}${daySuffix(day)} ${year}`;
+        if (!date) return '';
+        const day = date.getDate();
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const year = date.getFullYear();
+        const daySuffix = (d) => {
+            if (d > 4 && d < 21) return 'th';
+            switch (d % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        };
+        return `${month} ${day}${daySuffix(day)} ${year}`;
     };
-  
+
     const currentDate = formatDate(new Date());
     const joiningDate = user.batchStartDate ? formatDate(new Date(user.batchStartDate)) : 'September 15th 2025';
-  
+
     return `
   <!DOCTYPE html>
   <html lang="en">
@@ -154,7 +154,23 @@ module.exports = (user) => {
           }
           
           .bold { font-weight: bold; }
-          .footer { text-align: center; position: absolute; bottom: 0mm; left: 0; right: 0; z-index: 1; }
+          .footer { 
+              text-align: center; 
+              position: absolute; 
+              bottom: 6mm; 
+              left: 0; 
+              right: 0; 
+              z-index: 1; 
+              border-top: 1px solid #000; 
+              padding-top: 2mm; 
+              box-sizing: border-box; 
+              display: block;
+          }
+
+          .footer span {
+              display: inline-block;
+              max-width: calc(100% - 44mm); /* keeps text aligned with page margins */
+          }
 
           /* Annexure A styles */
           .annexure-title {
@@ -196,14 +212,28 @@ module.exports = (user) => {
               font-size: 15pt;
           }
           .annexure-signature .label { font-weight: bold; }
-          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; }
-          .annexure-signature .right-sec { text-align: right; justify-self: end; width: 180mm; }
+          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 50px;}
+          .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 50px; left: -100px; }
           .sig-field { margin-top: 0mm; }
           
           @media print {
               .page {
                   -webkit-print-color-adjust: exact;
                   print-color-adjust: exact;
+              }
+              .footer { 
+                  position: fixed; 
+                  bottom: 6mm; 
+                  left: 0; 
+                  right: 0; 
+                  border-top: 1px solid #000; 
+                  padding-top: 2mm; 
+                  box-sizing: border-box; 
+                  display: block;
+              }
+              .footer span {
+                  display: inline-block;
+                  max-width: calc(100% - 44mm);
               }
           }
       </style>
@@ -349,7 +379,7 @@ module.exports = (user) => {
               <p class="annexure-intro">This Annexure applies only to interns who are eligible for permanent employment with the Company and sets out the related compensation and terms.</p>
               <table class="annexure-table">
                   <tr>
-                      <th style="width:60%">Name: <span class="bold">${user.name ? user.title+ '. ' + user.name.toUpperCase() : 'Mr.TEST INTERN FORMAT'}</span></th>
+                      <th style="width:60%">Name: <span class="bold">${user.name ? user.title + '. ' + user.name.toUpperCase() : 'Mr.TEST INTERN FORMAT'}</span></th>
                       <th class="annexure-right">&nbsp;</th>
                   </tr>
                   <tr>
@@ -436,5 +466,4 @@ module.exports = (user) => {
   </body>
   </html>
     `;
-  };
-  
+};
