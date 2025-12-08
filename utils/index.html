@@ -1,331 +1,380 @@
 <!DOCTYPE html>
-<html lang="en">
+  <html lang="en">
+ <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Offer Letter</title>
+      <style>
+          @page {
+              size: A4;
+              margin: 18mm 22mm;
+          }
+          
+          body {
+              font-family: 'Times New Roman', serif;
+              font-size: 15pt;
+              line-height: 1.5;
+              color: #000;
+              margin: 0;
+              padding: 0;
+              background: #fff;
+          }
+          
+          .page {
+              width: 100%;
+              min-height: 297mm;
+              background: #fff;
+              /* ✅ Only watermark kept, background box removed */
+            //   background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
+              background-image: url('https://sig-careers.s3.ap-south-1.amazonaws.com/offerletters/snignavox_icon.png');
+              background-repeat: no-repeat;
+              background-position: center center;
+              background-size: 70% auto;
+              position: relative;
+              margin: 0 auto;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+          }
 
-<head>
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #fff;
-            color: #000;
-            margin: 0;
-            padding: 0;
-        }
+          /* Subtle overlay to reduce watermark thickness (opacity) */
+          .page::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 50mm;
+              background: rgba(255,255,255,0.7);
+              z-index: 0;
+              pointer-events: none;
+          }
 
-        .page {
-            width: 100%;
-            max-width: 280mm;
-            min-height: 397mm;
-            background: #fff;
-            position: relative;
-            padding: 20mm 5mm 15mm 5mm;
-            box-sizing: border-box;
-            page-break-after: always;
-            overflow: hidden;
-            margin: 0 auto;
-        }
+          .wm { display: none; }
 
-        .page::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: 400px auto;
-            opacity: 0.2;
-            z-index: 0;
-            pointer-events: none;
-        }
+          .page:not(:last-of-type) {
+              page-break-after: always;
+          }
+          
+          .header {
+              display: flex;
+              align-items: center;
+              justify-content: flex-start;
+              gap: 12px;
+              text-align: left;
+              margin: 10px 0 6px 0;
+              padding-top: 6px;
+              flex-shrink: 0;
+              position: relative;
+              z-index: 1;
+          }
+          
+          .company-logo {
+              width: 260px;
+              height: auto;
+          }
 
-        .content {
-            position: relative;
-            z-index: 1;
-            font-size: 18px;
-            line-height: 1.4;
-            width: 100%;
-            margin-bottom: 20mm;
-        }
+          .offer-title {
+              font-size: 22pt;
+              font-weight: bold;
+              text-align: center;
+              margin: 8px 0 4px 0;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              position: relative;
+              z-index: 1;
+          }
+          
+          .date-section {
+              text-align: right;
+              margin: 10px 0 6px 0;
+              font-weight: bold;
+              position: relative;
+              z-index: 1;
+              flex-shrink: 0;
+          }
+          
+          .content {
+              flex: 1;
+              text-align: justify;
+              margin: 6px 0 10px 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
+              position: relative;
+              z-index: 1;
+          }
+          
+          .greeting { margin: 6px 0; }
+          .greeting span { font-weight: bold; }
+          .main-content { margin: 6px 0; flex: 1; }
 
-        h1,
-        h2 {
-            font-size: 20px;
-            color: #000;
-        }
+          .numbered-list {
+              margin: 6px 0;
+              padding-left: 0;
+              list-style-position: inside;
+          }
+          
+          .numbered-list li {
+              margin-bottom: 12px;
+              text-align: justify;
+          }
+          
+          .sub-list {
+              margin: 6px 0;
+              padding-left: 0;
+              list-style-position: inside;
+          }
+          
+          .sub-list li {
+              margin-bottom: 8px;
+              text-align: justify;
+          }
+          
+          .bold { font-weight: bold; }
+          .footer { 
+              text-align: center; 
+              position: absolute; 
+              bottom: 6mm; 
+              left: 0; 
+              right: 0; 
+              z-index: 1; 
+              border-top: 1px solid #000; 
+              padding-top: 2mm; 
+              box-sizing: border-box; 
+              display: block;
+          }
 
-        .date-right {
-            text-align: right;
-            font-size: 16px;
-        }
+          .footer span {
+              display: inline-block;
+              max-width: calc(100% - 44mm); /* keeps text aligned with page margins */
+          }
 
-        .footer {
-            position: relative;
-            top: 10mm;
-            bottom: 2mm;
-            /* left: 5mm;
-            right: 5mm; */
-            text-align: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #000;
-            border-top: 2px solid #ccc;
-            padding-top: 1px;
-            background: #fff;
-        }
+          /* Annexure A styles */
+          .annexure-title {
+              text-align: center;
+              font-weight: bold;
+              margin: 6mm 0 3mm 0;
+              font-size: 15pt;
+          }
+          .annexure-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 15pt;
+              z-index: 1;
+          }
+          .annexure-table th,
+          .annexure-table td {
+              border: 1px solid #000;
+              padding: 6px 8px;
+              vertical-align: middle;
+          }
+          .annexure-table th { text-align: left; }
+          .annexure-right { text-align: right; white-space: nowrap; }
+          .annexure-highlight { background: #d8f3dc; font-weight: bold; }
+          .annexure-notes {
+              margin-top: 6px;
+              font-size: 15pt;
+              line-height: 1.5;
+          }
+          .annexure-intro {
+              font-size: 15pt;
+              margin: 4mm 0 6mm 0;
+          }
+          .annexure-signature {
+              display: grid;
+              grid-template-columns: 1fr 1.2fr;
+              gap: 20mm;
+              align-items: center;
+              margin-top: 2mm;
+              font-size: 15pt;
+          }
+          .annexure-signature .label { font-weight: bold; }
+          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 20px; left: 50px; }
+          .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 50px; left: -100px; }
+          .sig-field { margin-top: 0mm; }
+          
+          @media print {
+              .page {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+              }
+              .footer { 
+                  position: fixed; 
+                  bottom: -1mm; 
+                  left: 0; 
+                  right: 0; 
+                  border-top: 1px solid #000; 
+                  padding-top: 2mm; 
+                  box-sizing: border-box; 
+                  display: block;
+              }
+              .footer span {
+                  display: inline-block;
+                  max-width: calc(100% - 44mm);
+              }
+                  
+            .annexure-signature {
+                gap: 14mm;
+                margin-top: 6mm;
+            }
 
-        strong {
-            font-weight: bold;
-        }
+            .annexure-signature .left-sec img {
+                max-width: 220px;
+            }
+            .annexure-signature .left-sec .label {
+                margin-top: -4mm;
+            }
+          }
+      </style>
+  </head>
+  <body>
+      <div class="page">
+          <div class="wm"></div>
+          <div class="header">
+              <img src="https://sig-careers.s3.ap-south-1.amazonaws.com/Signavox_black+(1).png" alt="Company Logo" class="company-logo">
+              
+          </div>
+          <div class="offer-title">Offer Letter</div>
+          
+          <div class="date-section">
+              Date: ${currentDate}
+          </div>
+          
+          <div class="content">
+              <div class="greeting">
+                  Dear <span>${user.name}</span>,
+              </div>
+              
+              <div class="main-content">
+                  <p><strong>Congratulations!</strong></p>
+                  
+                  <p>After the discussion we had recently with you, we are pleased to offer you an Internship at <strong>SIGNAVOX TECHNOLOGIES PRIVATE LIMITED</strong> as per the terms and conditions mentioned below:</p>
+                  
+                  <ol class="numbered-list">
+                      <li><strong>DATE OF JOINING</strong><br>
+                          Your internship will commence from <strong>${joiningDate}</strong>.
+                      </li>
+                      
+                      <li><strong>DESIGNATION:</strong> Associate Software Engineer Intern</li>
+                      
+                      <li><strong>PLACEMENT OF WORK</strong>
+                          <ol type="i" class="sub-list">
+                              <li>Your place of work will be <strong>Hyderabad</strong>.</li>
+                              <li>You may be required to work in any Position, Department or Shift as may be assigned from time to time.</li>
+                              <li>During your internship, you may be transferred to any of the establishments of the Company or its associated Companies in which case you will be governed by the rules and regulations applicable to that establishment.</li>
+                          </ol>
+                      </li>
+                      
+                      <li><strong>WORKING HOURS</strong><br>
+                          Company follows 9-hour workday and 05 working days a week, with Saturday and Sunday as weekly off for General shift associates. The core working hours are from <strong>9:30 AM to 6:30 PM</strong>.
+                      </li>
+                      
+                      <li><strong>SECRECY</strong>
+                          <ol type="i" class="sub-list">
+                              <li>If your employment is a full-time assignment, you shall devote your whole time and attention to the interest of the Company and shall not engage in any other business/occupation.</li>
+                              <li>You shall not conduct yourself in any manner amounting to breach of confidence or inconsistent with the position held by you.</li>
+                              <li>You shall not, at any time, during your employment or thereafter, disclose to any person, firm or Company any information concerning the affairs of the Company or disclose, without the written permission of the Company, any information which is or may be of a confidential nature.</li>
+                              <li>You are required to sign the non-disclosure agreement in the prescribed format which shall form a part of these terms and conditions.</li>
+                          </ol>
+                      </li>
+                      
+                      <li><strong>EMPLOYEE BENEFITS</strong><br>
+                          As an intern at SIGNAVOX TECHNOLOGIES PRIVATE LIMITED, you will be entitled to a range of benefits designed to support your overall well-being and professional development throughout the internship period. These include basic health insurance coverage, access to essential company tools and internal resources, and participation in training programs aligned with your project work. Upon successful completion of the internship, you will be awarded a formal certificate acknowledging your contribution and tenure. Interns demonstrating exceptional performance may be considered for performance-based incentives or future employment opportunities, including Pre-Placement Offers (PPOs), subject to business requirements. The company may also extend access to select team engagements, internal events, or learning platforms to encourage broader exposure and integration into the corporate environment.
+                      </li>
+                      
+                  </ol>
+              </div>
+          </div>
+          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+      </div>
+      
+      <div class="page">
+          <div class="wm"></div>
+          <div class="content">
+          <ol class="numbered-list" start="7">
+          <li><strong>KEY POLICIES, PROCEDURES AND PRACTICES</strong><br>
+                          During your employment with SIGNAVOX TECHNOLOGIES (and where applicable after your employment has concluded) you must comply with all of the Company's policies and procedures and any legal and/or statutory and/or regulatory obligations, including (but not limited to) SIGNAVOX TECHNOLOGIES policies and procedures on, and any other obligations relating to, anti-bribery and corruption. Failure to do so may result in disciplinary action being taken against you. You should familiarize yourself with all policies and procedures that apply to your grade and business area as set out on intranet Signavoxtechnologies.com.
+                          
+                      </li>
+                  <li><strong>TERMINATION OF SERVICE</strong>
+                      <ol type="i" class="sub-list">
+                          <li>This offer is our formal contract and must be read and accepted in conjunction with the Internship Agreement, Proprietary Agreement and Disclosure of interest. In addition to these terms and conditions stated in the above documents, there are other Company policies and procedures which you agree to observe and follow during your internship and, if applicable, subsequent employment with SIGNAVOX TECHNOLOGIES. These Company policies and procedures may vary from time to time.</li>
+                          <li>If at any time, in the opinion of the Company, which shall be final, you are deemed insolvent or are found to be guilty of dishonesty, disobedience, disorderly behavior, negligence, indiscipline, absence from duty without permission or of any conduct unbecoming of the status and the post you hold in the Company's interests or of violation of one or more terms of this letter, your services may be terminated immediately.</li>
+                          <li>You have been offered this position in good faith that all the information and documents provided by you at the time of engagement for this employment are true and correct. Your continued engagement is contingent upon satisfactory background verification. SIGNAVOX TECHNOLOGIES reserves the right to terminate your engagement without notice if the information and documents provided by you are found incorrect. SIGNAVOX TECHNOLOGIES warrants the right to recover the costs incurred to perform the check and withhold your salary thereby.</li>
+                          <li>Absences from Work: Approval should be obtained in advance from your line manager for absence during working hours. If unexpected circumstances mean that this is not possible, you should inform your line manager as soon as possible. Absence without approval and / or explanation will be dealt with under the disciplinary procedure which could result in disciplinary action being taken against you by the Company and which may result in the termination of your employment.</li>
+                          <li>In cases of serious misconduct, including but not limited to fraud, theft, sexual harassment, or any other criminal activity as defined by law or company policy, SIGNAVOX TECHNOLOGIES PRIVATE LIMITED reserves the right to terminate the internship with immediate effect, without any notice.</li>
+                      </ol>
+                  </li>
+                  
+                  <li><strong>RULES & REGULATIONS</strong><br>
+                      During your employment, you will be governed by the rules, regulations of service and orders of the Company that may be in force and which may be amended, altered or extended from time to time. Your acceptance of this offer carries with it your agreement to observe all such rules, regulations and orders.<br><br>
+                      This offer will automatically lapse if not accepted within one (1) week from the date of this letter.
+                  </li>
+                  
+                  <li><strong>PERSONAL INFORMATION (PI)</strong><br>
+                      During the process of your employment with Signavox Technologies you may provide or confirm the confidential data or any information that is related to you personally, including without limitation to your email, contact details, taxation, family records, medical records (PI). You confirm that Signavox Technologies may collect use, transfer, store or process such PI as per SIGNAVOX TECHNOLOGIES policies, for Signavox Technologies benefits, Background verifications, financial and accounting aspects and for risk management purposes.
+                  </li>
+              </ol>
+          </div>
+          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+      </div>
+      <div class="page">
+          <div class="wm"></div>
+          <div class="content">
+          <ol start="11">
+          <li><strong>COMPENSATION STRUCTURE</strong><br>
+                      The company may, at any time, review and/or restructure the compensation package based on Signavox Technologies Policy or any local legislation changes.
+                  </li>
+          <li><strong>PAYROLL DATE</strong><br>
+                      Stipend will be paid monthly, subject to applicable and is typically processed at the end of each month for associates who have joined before the payroll cut-off.
+                  </li>
+           <li><strong>TOTAL REWARDS</strong><br>
+                      SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per market standards, including an excellent benefits program comprising health, finance and wealth, work/life balance, and learning and career benefits.
+                  </li>
+              </ol>
+              <ol>
+              <ol type="i" class="sub-list">
+                          <li><strong>COMPENSATION</strong><br>
+                              SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable compensation for every associate. We always value excellence and high performance.<br><br>
+                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong>.<br><br>
+        
+                          </li>
+                          <li><strong>LEAVE</strong><br>
+                              You will be entitled to 3 leaves in a calendar year on a monthly accrual basis.
+                          </li>
+                          <li><strong>HOLIDAYS</strong><br>
+                              As an intern, you will be eligible to observe all official company holidays as outlined in the annual holiday calendar applicable to regular employees.
+                          </li>
+                          <li><strong>HEALTH AND WELL-BEING</strong><br>
+                              SIGNAVOX TECHNOLOGIES promotes employee health and wellbeing and helps create positive working environments where individuals and organizations can thrive. We believe good health and wellbeing are core enablers which drive employee engagement and organizational performance.
+                          </li>
+                          <li><strong>REWARDS AND RECOGNITION PROGRAMS</strong><br>
+                              SIGNAVOX TECHNOLOGIES acknowledges employee contributions, commitment and efforts towards endeavors and achievements. The Company promotes performance and optimistic behaviors through various monetary and non-monetary Rewards and Recognition programs.
+                          </li>
+                          <li><strong>CAREER DEVELOPMENT</strong><br>
+                              We are huge advocates for your career development. We will encourage you to move to higher/new roles and reach your potential by frequently helping you to enhance skills or acquire new skills.
+                          </li>
+                      </ol>
+                      </ol>
+          </div>
+          <div class="annexure-signature">
+                  <div class="left-sec">
+                    <div>With Best Wishes</div>
+                    <img src="https://sig-careers.s3.ap-south-1.amazonaws.com/Paul+sir+signature.png" alt="Director Signature" srcset="">
+                    <div class="label">Paul Tirupathi</div>
+                    <div class="label">Cheif Executive Officer</div>
+                    <div class="label">SIGNAVOX TECHNOLOGIES PVT LTD</div>
 
-        ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        ol {
-            padding-left: 20px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <!-- PAGE 1 -->
-    <div class="page">
-        <div class="content">
-            <div class="date-right">DATE: ${currentDate}</div><br>
-            <p>
-                To,<br>
-                <strong>${user.name || ''}</strong><br>
-                ${user.employeeAddress || ''}
-            </p>
-            <p>Dear ${user.firstName || ''},</p>
-            <p><strong>Sub: Offer of appointment as Intern</strong></p>
-            <p>Congratulations!</p>
-            <p>
-                After the discussion we had recently with you, we are pleased to offer you an appointment with
-                <strong>SIGNAVOX TECHNOLOGIES PRIVATE LIMITED</strong> as per the terms and conditions mentioned below:
-            </p>
-            <ol>
-                <li><strong>DATE OF JOINING</strong><br>
-                    Your internship will commence from <strong>${joiningDate}</strong>.
-                </li>
-                <li><strong>DESIGNATION:</strong> Software Engineer Intern</li>
-                <li><strong>PLACEMENT OF WORK</strong>
-                    <ul>
-                        <li>Your place of work will be <strong>${user.placeOfWork || 'Hyderabad'}</strong>.</li>
-                        <li>You may be required to work in any Position, Department or Shift as may be assigned from
-                            time to time.</li>
-                        <li>During your internship, you may be transferred to any of the establishments of the Company
-                            or its associated Companies in which case you will be governed by the rules and regulations
-                            applicable to that establishment.</li>
-                    </ul>
-                </li>
-                <li><strong>WORKING HOURS</strong><br>
-                    Company follows 9-hour workday and 05 working days a week, with Saturday and Sunday as weekly off
-                    for General shift associates. The core working hours are from 9.30 AM to 6.30 PM.
-                </li>
-                <li><strong>SECRECY</strong>
-                    <ol type="i">
-                        <li>If your employment is a full-time assignment, you shall devote your whole time and attention
-                            to the interest of the Company and shall not engage in any other business/occupation.</li>
-                        <li>You shall not conduct yourself in any manner amounting to breach of confidence or
-                            inconsistent with the position held by you.</li>
-                        <li>You shall not, at any time, during your employment or thereafter, disclose to any person,
-                            firm or Company any information concerning the affairs of the Company or disclose, without
-                            the written permission of the Company, any information which is or may be of a confidential
-                            nature.</li>
-                        <li>You are required to sign the non-disclosure agreement in the prescribed format which shall
-                            form a part of these terms and conditions.</li>
-                    </ol>
-                </li>
-
-                <li><strong>KEY POLICIES, PROCEDURES AND PRACTICES</strong><br></li>
-                During your employment with SIGNAVOX TECHNOLOGIES (and where applicable after your employment has
-                terminated) you must comply with all of the Company's policies and procedures and any legal and/or
-                statutory and/or regulatory obligations, including (but not limited to) SIGNAVOX TECHNOLOGIES policies
-                and procedures on, and any other obligations relating to, anti-bribery and corruption. Failure to do so
-                may result in disciplinary action being taken against you.
-                <br><br>
-                You should familiarize yourself with all policies and procedures that apply to your grade and business
-                area as set out on intranet Signavoxtechnologies.com.<br><br>
-                <li><strong>TERMINATION OF SERVICE</strong></li>
-                <ol type="i">
-                    <li>This offer is our formal contract and must be read and accepted in conjunction with the
-                        Internship Agreement, Proprietary Agreement and Disclosure of interest. In addition to these
-                        terms and conditions stated in the above documents, there are other Company policies and
-                        procedures which you agree to observe and follow during your internship and, if applicable,
-                        subsequent employment with SIGNAVOX TECHNOLOGIES. These Company policies and procedures may vary
-                        from time to time.</li><br>
-                    <li>If at any time, in the opinion of the Company, which shall be final, you are deemed insolvent or
-                        are found to be guilty of dishonesty, disobedience, disorderly behavior, negligence,
-                        indiscipline, absence from duty without permission or of any conduct unbecoming of the status
-                        and the post you hold in the Company’s interests or of violation of one or more terms of this
-                        letter, your services may be terminated immediately.</li><br>
-                    
-                </ol>
-
-            </ol>
-        </div>
-        <div class="footer">
-            SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
-            500081
-        </div>
-    </div>
-    <!-- PAGE 2 -->
-    <div class="page">
-        <div class="content">
-            <ol start="6">
-                <ol>
-                    <li>You have been offered this position in good faith that all the information and documents
-                        provided by you at the time of engagement for this employment are true and correct. Your
-                        continued engagement is contingent upon satisfactory background verification. SIGNAVOX
-                        TECHNOLOGIES reserves the right to terminate your engagement without notice if the information
-                        and documents provided by you are found incorrect. SIGNAVOX TECHNOLOGIES warrants the right to
-                        recover the costs incurred to perform the check and withhold your salary thereby.</li><br>
-                    <li>Absences from Work: Approval should be obtained in advance from your line manager for absence
-                        during working hours. If unexpected circumstances mean that this is not possible, you should
-                        inform your line manager as soon as possible. Absence without approval and / or explanation will
-                        be dealt with under the disciplinary procedure which could result in disciplinary action being
-                        taken against you by the Company and which may result in the termination of your employment.
-                    </li>
-                    <li>Absences from Work: Approval should be obtained in advance from your line manager for absence
-                        during working hours. If unexpected circumstances mean that this is not possible, you should
-                        inform your line manager as soon as possible. Absence without approval and / or explanation will
-                        be dealt with under the disciplinary procedure which could result in disciplinary action being
-                        taken against you by the Company and which may result in the termination of your employment.
-                    </li>
-                    <li><strong>NOTICE PERIOD</strong><br>
-                        During the Internship program, your services can be terminated by giving <strong>15
-                            days'</strong>
-                        notice in writing or Notice period payment in lieu of notice if any allegation bounded legally
-                        in
-                        primary inquiry that you have committed any crime such as rape, fraud, theft, murder and sexual
-                        harassment as per Signavox Technologies policy and local legislation. Signavox Technologies also
-                        expect you to provide the above facts voluntarily. In the case of shorter notice, the liability
-                        will
-                        be restricted to payment for the proportionate period which falls short of the notice period. If
-                        during the notice period you are absent without permission, your services can be terminated
-                        without
-                        any notice. Any reduction/waiver of the notice period shall be at the sole discretion of the
-                        Company. The Company may adjust the balance of annual leave, while granting such a
-                        reduction/waiver.
-                    </li><br>
-                    <li><strong>RULES & REGULATIONS</strong><br>
-                        During your employment, you will be governed by the rules, regulations of service and orders of
-                        the
-                        Company that may be in force and which may be amended, altered or extended from time to time.
-                        Your
-                        acceptance of this offer carries with it your agreement to observe all such rules, regulations
-                        and
-                        orders.
-                        <br><br>
-                        This offer will automatically lapse if not accepted within one (1) week from the date of this
-                        letter.
-                    </li><br>
-                    <li><strong>PERSONAL INFORMATION (PI)</strong><br>
-                        During the process of your employment with Signavox Technologies you may provide or confirm the
-                        confidential data or any information that is related to you personally, including without
-                        limitation
-                        to your email, contact details, taxation, family records, medical records (PI). You confirm that
-                        Signavox Technologies may collect use, transfer, store or process such PI as per SIGNAVOX
-                        TECHNOLOGIES policies, for Signavox Technologies benefits, Background verifications, financial
-                        and
-                        accounting aspects and for risk management purposes.
-                    </li><br>
-                    <li><strong>COMPENSATION STRUCTURE</strong><br>
-                        The company may, at any time, review and/or restructure the compensation package based on
-                        Signavox
-                        Technologies Policy or any local legislation changes.
-                    </li><br>
-                    <li><strong>TAX IMPLICATION</strong><br>
-                        You are responsible for declarations and implications for all your personal income tax and
-                        filing
-                        returns on a yearly basis.
-                    </li><br>
-                    <li><strong>PAYROLL DATE</strong><br>
-                        <strong>Stipend will be paid monthly, subject to applicable taxes, duties, cases, and other
-                            statutory deductions, and is typically processed at the end of each month for associates who
-                            have joined before the payroll cut-off.</strong>
-                    </li>
-                </ol>
-
-            </ol>
-        </div>
-        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
-            Telangana, India, 500081</div>
-    </div>
-
-    <!-- PAGE 3 -->
-    <div class="page">
-        <div class="content">
-            <ol start="8">
-                <li><strong>TOTAL REWARDS</strong><br><br>
-                    SIGNAVOX TECHNOLOGIES offers a Total Rewards plan with a comprehensive compensation package per
-                    market standards, including an excellent benefits program comprising health, finance and wealth,
-                    work/life balance, and learning and career benefits.
-                    <br><br>
-                    <ol type="i">
-                        <li><strong>COMPENSATION</strong><br>
-                            SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable
-                            compensation for every associate. We always value excellence and high performance.
-                            <br><br>
-                            During your Internship period, you shall be eligible for a stipend of <strong>INR 7000
-                                (Rupees Seven Thousand Only)</strong> on last 3 months.
-                        </li><br>
-                        <li><strong>LEAVE</strong><br>
-                            You will be entitled to 3 Days leave in a calendar year on a monthly accrual basis.
-                        </li><br>
-                        <li><strong>HOLIDAYS</strong><br>
-                            You shall be eligible for 9 holidays in a calendar year per the published calendar.
-                            Associates working out of client locations shall follow the client holiday calendar.
-                        </li><br>
-                        <li><strong>HEALTH AND WELL-BEING</strong><br>
-                            SIGNAVOX TECHNOLOGIES promotes employee health and wellbeing and helps create positive
-                            working environments
-                            where individuals and organizations can thrive. We believe good health and wellbeing are
-                            core enablers which drive
-                            employee engagement and organizational performance.
-                        </li><br>
-                        Health Insurance:<br>
-                        You shall be covered under the following Insurance benefits from the date of joining as
-                        Interns and the cost of premium will
-                        be borne by the Company during your training period:
-                        <br><br>
-
-                        <li><strong>REWARDS AND RECOGNITION PROGRAMS</strong><br>
-                            SIGNAVOX TECHNOLOGIES acknowledges employee contributions, commitment and efforts towards
-                            endeavors and achievements. The Company promotes performance and optimistic behaviors
-                            through various monetary and non-monetary Rewards and Recognition programs.
-                        </li><br>
-                        <li><strong>CAREER DEVELOPMENT</strong><br>
-                            We are huge advocates for your career development. We will encourage you to move to
-                            higher/new roles and reach your potential by frequently helping you to enhance skills or
-                            acquire new skills.
-                        </li>
-                    </ol>
-                </li>
-            </ol>
-        </div>
-        <div class="footer">SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad,
-            Telangana, India, 500081</div>
-    </div>
-
-    <!-- PAGE 4 -->
-    <!-- <div class="page">
-        <div class="content">
-            <ol start="14">
-
-            </ol>
-        </div>
-        <div class="footer">
-            SIGNAVOX TECHNOLOGIES PVT LTD | Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India,
-            500081
-        </div>
-    </div> -->
-
-</body>
-
-</html>
+                  </div>
+                  <div class="right-sec">
+                      <div class="label">Accepted</div>
+                      <div class="sig-field">Name:</div>
+                      <div class="sig-field">Signature:</div>
+                      <div class="sig-field">Date:</div>
+                  </div>
+              </div>
+          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+      </div>  
+  </body>
+  </html>

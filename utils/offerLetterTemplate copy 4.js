@@ -15,7 +15,7 @@ module.exports = (user) => {
                 default: return 'th';
             }
         };
-        return `${day}${daySuffix(day)} ${month} ${year}`;
+        return `${month} ${day}${daySuffix(day)} ${year}`;
     };
 
     const currentDate = formatDate(new Date());
@@ -49,8 +49,7 @@ module.exports = (user) => {
               min-height: 297mm;
               background: #fff;
               /* ✅ Only watermark kept, background box removed */
-            //   background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
-              background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
+              background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
               background-repeat: no-repeat;
               background-position: center center;
               background-size: 70% auto;
@@ -68,7 +67,7 @@ module.exports = (user) => {
               top: 0;
               left: 0;
               right: 0;
-              bottom: 70mm;
+              bottom: 0;
               background: rgba(255,255,255,0.7);
               z-index: 0;
               pointer-events: none;
@@ -130,7 +129,6 @@ module.exports = (user) => {
           }
           
           .greeting { margin: 6px 0; }
-          .greeting span { font-weight: bold; }
           .main-content { margin: 6px 0; flex: 1; }
 
           .numbered-list {
@@ -209,13 +207,12 @@ module.exports = (user) => {
               display: grid;
               grid-template-columns: 1fr 1.2fr;
               gap: 20mm;
-              align-items: center;
+              align-items: start;
               margin-top: 2mm;
               font-size: 15pt;
           }
           .annexure-signature .label { font-weight: bold; }
-          .annexure-signature .signature-block { font-weight: bold; }
-          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 20px; left: 50px; }
+          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 50px;}
           .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 50px; left: -100px; }
           .sig-field { margin-top: 0mm; }
           
@@ -226,7 +223,7 @@ module.exports = (user) => {
               }
               .footer { 
                   position: fixed; 
-                  bottom: -1mm; 
+                  bottom: 6mm; 
                   left: 0; 
                   right: 0; 
                   border-top: 1px solid #000; 
@@ -238,18 +235,6 @@ module.exports = (user) => {
                   display: inline-block;
                   max-width: calc(100% - 44mm);
               }
-                  
-            .annexure-signature {
-                gap: 14mm;
-                margin-top: 15mm;
-            }
-
-            .annexure-signature .left-sec img {
-                max-width: 220px;
-            }
-            .annexure-signature .left-sec .signature-block {
-                margin-top: -4mm;
-            }
           }
       </style>
   </head>
@@ -257,7 +242,7 @@ module.exports = (user) => {
       <div class="page">
           <div class="wm"></div>
           <div class="header">
-              <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Signavox_black_no_bg.png" alt="Company Logo" class="company-logo">
+              <img src="https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/undefined.jfif" alt="Company Logo" class="company-logo">
               
           </div>
           <div class="offer-title">Offer Letter</div>
@@ -268,7 +253,7 @@ module.exports = (user) => {
           
           <div class="content">
               <div class="greeting">
-                  Dear <span>${user.name}</span>,
+                  Dear ${user.name},
               </div>
               
               <div class="main-content">
@@ -281,7 +266,7 @@ module.exports = (user) => {
                           Your internship will commence from <strong>${joiningDate}</strong>.
                       </li>
                       
-                      <li><strong>DESIGNATION:</strong> Associate Software Engineer Intern</li>
+                      <li><strong>DESIGNATION:</strong> Software Engineer Intern</li>
                       
                       <li><strong>PLACEMENT OF WORK</strong>
                           <ol type="i" class="sub-list">
@@ -292,7 +277,7 @@ module.exports = (user) => {
                       </li>
                       
                       <li><strong>WORKING HOURS</strong><br>
-                          Company follows 9-hour workday and 05 working days a week, with Saturday and Sunday as weekly off for General shift associates. The core working hours are from <strong>9:30 AM to 6:30 PM</strong>.
+                          Company follows 8-hour workday and 05 working days a week, with Saturday and Sunday as weekly off for General shift associates. The core working hours are from <strong>10 AM to 6 PM</strong>.
                       </li>
                       
                       <li><strong>SECRECY</strong>
@@ -311,7 +296,7 @@ module.exports = (user) => {
                   </ol>
               </div>
           </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>
       
       <div class="page">
@@ -342,7 +327,7 @@ module.exports = (user) => {
                   </li>
               </ol>
           </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
       </div>
       <div class="page">
           <div class="wm"></div>
@@ -362,11 +347,11 @@ module.exports = (user) => {
               <ol type="i" class="sub-list">
                           <li><strong>COMPENSATION</strong><br>
                               SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable compensation for every associate. We always value excellence and high performance.<br><br>
-                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong>.<br><br>
-        
+                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong> on last 3 months.<br><br>
+                              *Upon onboarding as a full-time employee, your compensation structure will be as outlined in Annexure - A.
                           </li>
                           <li><strong>LEAVE</strong><br>
-                              You will be entitled to 3 leaves in a calendar year on a monthly accrual basis.
+                              You will be entitled to 3 Days leave in a calendar year on a monthly accrual basis.
                           </li>
                           <li><strong>HOLIDAYS</strong><br>
                               As an intern, you will be eligible to observe all official company holidays as outlined in the annual holiday calendar applicable to regular employees.
@@ -382,9 +367,11 @@ module.exports = (user) => {
                           </li>
                       </ol>
                       </ol>
-            </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
-      </div>
+          </div>
+          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
+      </div>  
+      
+      <!-- Annexure A Page -->
       <div class="page">
           <div class="content">
           
@@ -460,26 +447,22 @@ module.exports = (user) => {
                       </td>
                   </tr>
               </table>
-          </div>
-          <div class="annexure-signature">
-                <div class="left-sec">
-                    <div>With Best Wishes</div>
-                    <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Paul+Sir+sign.png" alt="Director Signature" srcset="">
-                    <div class="signature-block">
-                        <div class="director-name">Paul Tirupathi</div>
-                        <div class="director-role">Chief Executive Officer</div>
-                        <div class="label">SIGNAVOX TECHNOLOGIES PVT LTD</div>
-                    </div>
-                </div>
-                <div class="right-sec">
+  
+              <div class="annexure-signature">
+                  <div class="left-sec">
+                      <div>With Best Wishes</div>
+                      <div class="label">SIGNAVOX TECHNOLOGIES PVT LTD</div>
+                  </div>
+                  <div class="right-sec">
                       <div class="label">Accepted</div>
                       <div class="sig-field">Name:</div>
                       <div class="sig-field">Signature:</div>
                       <div class="sig-field">Date:</div>
-                </div>
-            </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
-      </div>  
+                  </div>
+              </div>
+          </div>
+          <div class="footer">Corp Work Hub, 81 Jubilee Enclave, Hitech city, Hyderabad, Telangana, India, 500081</div>
+      </div>
   </body>
   </html>
     `;

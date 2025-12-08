@@ -1,3 +1,8 @@
+// server.js — top of file
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+console.log('Loaded .env from:', path.resolve(__dirname, '.env'));
+console.log('AWS_BUCKET_NAME (initial):', process.env.AWS_BUCKET_NAME);
 const http = require('http');
 const app = require('./app');
 const { initializeSocket } = require('./socketServer'); // ✅ correct import

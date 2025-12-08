@@ -15,7 +15,7 @@ module.exports = (user) => {
                 default: return 'th';
             }
         };
-        return `${day}${daySuffix(day)} ${month} ${year}`;
+        return `${month} ${day}${daySuffix(day)} ${year}`;
     };
 
     const currentDate = formatDate(new Date());
@@ -49,8 +49,8 @@ module.exports = (user) => {
               min-height: 297mm;
               background: #fff;
               /* ✅ Only watermark kept, background box removed */
-            //   background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
-              background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
+            //   background-image: url('https://my-s3-for-scl-project.s3.ap-south-1.amazonaws.com/tickets/snignavox_icon.png');
+              background-image: url('https://sig-careers.s3.ap-south-1.amazonaws.com/offerletters/snignavox_icon.png');
               background-repeat: no-repeat;
               background-position: center center;
               background-size: 70% auto;
@@ -68,7 +68,7 @@ module.exports = (user) => {
               top: 0;
               left: 0;
               right: 0;
-              bottom: 70mm;
+              bottom: 0;
               background: rgba(255,255,255,0.7);
               z-index: 0;
               pointer-events: none;
@@ -130,7 +130,6 @@ module.exports = (user) => {
           }
           
           .greeting { margin: 6px 0; }
-          .greeting span { font-weight: bold; }
           .main-content { margin: 6px 0; flex: 1; }
 
           .numbered-list {
@@ -209,13 +208,12 @@ module.exports = (user) => {
               display: grid;
               grid-template-columns: 1fr 1.2fr;
               gap: 20mm;
-              align-items: center;
+              align-items: start;
               margin-top: 2mm;
               font-size: 15pt;
           }
           .annexure-signature .label { font-weight: bold; }
-          .annexure-signature .signature-block { font-weight: bold; }
-          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 20px; left: 50px; }
+          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 50px;}
           .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 50px; left: -100px; }
           .sig-field { margin-top: 0mm; }
           
@@ -238,18 +236,6 @@ module.exports = (user) => {
                   display: inline-block;
                   max-width: calc(100% - 44mm);
               }
-                  
-            .annexure-signature {
-                gap: 14mm;
-                margin-top: 15mm;
-            }
-
-            .annexure-signature .left-sec img {
-                max-width: 220px;
-            }
-            .annexure-signature .left-sec .signature-block {
-                margin-top: -4mm;
-            }
           }
       </style>
   </head>
@@ -257,7 +243,7 @@ module.exports = (user) => {
       <div class="page">
           <div class="wm"></div>
           <div class="header">
-              <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Signavox_black_no_bg.png" alt="Company Logo" class="company-logo">
+              <img src="https://sig-careers.s3.ap-south-1.amazonaws.com/Signavox_black+(1).png" alt="Company Logo" class="company-logo">
               
           </div>
           <div class="offer-title">Offer Letter</div>
@@ -268,7 +254,7 @@ module.exports = (user) => {
           
           <div class="content">
               <div class="greeting">
-                  Dear <span>${user.name}</span>,
+                  Dear ${user.name},
               </div>
               
               <div class="main-content">
@@ -281,7 +267,7 @@ module.exports = (user) => {
                           Your internship will commence from <strong>${joiningDate}</strong>.
                       </li>
                       
-                      <li><strong>DESIGNATION:</strong> Associate Software Engineer Intern</li>
+                      <li><strong>DESIGNATION:</strong>Associate Software Engineer Intern</li>
                       
                       <li><strong>PLACEMENT OF WORK</strong>
                           <ol type="i" class="sub-list">
@@ -311,7 +297,7 @@ module.exports = (user) => {
                   </ol>
               </div>
           </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+          <div class="footer">5th floor,Signavox Technologies, AV Hub, 5th floor, C9RP+6RJ, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081.</div>
       </div>
       
       <div class="page">
@@ -342,7 +328,7 @@ module.exports = (user) => {
                   </li>
               </ol>
           </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+          <div class="footer">5th floor,Signavox Technologies, AV Hub, 5th floor, C9RP+6RJ, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081.</div>
       </div>
       <div class="page">
           <div class="wm"></div>
@@ -362,11 +348,11 @@ module.exports = (user) => {
               <ol type="i" class="sub-list">
                           <li><strong>COMPENSATION</strong><br>
                               SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable compensation for every associate. We always value excellence and high performance.<br><br>
-                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong>.<br><br>
+                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong> on last 6 months.<br><br>
         
                           </li>
                           <li><strong>LEAVE</strong><br>
-                              You will be entitled to 3 leaves in a calendar year on a monthly accrual basis.
+                              You will be entitled to no leaves in a calendar year on a monthly accrual basis.
                           </li>
                           <li><strong>HOLIDAYS</strong><br>
                               As an intern, you will be eligible to observe all official company holidays as outlined in the annual holiday calendar applicable to regular employees.
@@ -382,103 +368,20 @@ module.exports = (user) => {
                           </li>
                       </ol>
                       </ol>
-            </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
-      </div>
-      <div class="page">
-          <div class="content">
-          
-              <div class="annexure-title">Annexure A</div>
-              <p class="annexure-intro">This Annexure applies only to interns who are eligible for permanent employment with the Company and sets out the related compensation and terms.</p>
-              <table class="annexure-table">
-                  <tr>
-                      <th style="width:60%">Name: <span class="bold">${user.name ? user.title + '. ' + user.name.toUpperCase() : 'Mr.TEST INTERN FORMAT'}</span></th>
-                      <th class="annexure-right">&nbsp;</th>
-                  </tr>
-                  <tr>
-                      <th>Title: <span class="bold">Software Engineer</span></th>
-                      <th class="annexure-right">&nbsp;</th>
-                  </tr>
-                  <tr>
-                      <th>Components of Total Cost to Company</th>
-                      <th class="annexure-right">Rs. (Per Annum)</th>
-                  </tr>
-                  <tr>
-                      <td>Basic</td>
-                      <td class="annexure-right">1,30,000.00</td>
-                  </tr>
-                  <tr>
-                      <td>HRA</td>
-                      <td class="annexure-right">52,000.00</td>
-                  </tr>
-                  <tr>
-                      <td>Conveyance</td>
-                      <td class="annexure-right">20,800.00</td>
-                  </tr>
-                  <tr>
-                      <td>Medical Allowance</td>
-                      <td class="annexure-right">18,200.00</td>
-                  </tr>
-                  <tr>
-                      <td>Leave Travel Allow</td>
-                      <td class="annexure-right">23,400.00</td>
-                  </tr>
-                  <tr>
-                      <td>Employee PF</td>
-                      <td class="annexure-right">15,600.00</td>
-                  </tr>
-                  <tr class="annexure-highlight">
-                      <td>Gross Salary (A)</td>
-                      <td class="annexure-right">2,60,000</td>
-                  </tr>
-                  <tr>
-                      <td>Additional Benefits (B)</td>
-                      <td class="annexure-right">&nbsp;</td>
-                  </tr>
-                  <tr>
-                      <td>Variable Pay</td>
-                      <td class="annexure-right">50,000.00</td>
-                  </tr>
-                  <tr>
-                      <td>PERFORMANCE BONUS</td>
-                      <td class="annexure-right">40,000.00</td>
-                  </tr>
-                  <tr class="annexure-highlight">
-                      <td>Cost to Company (CTC) (A + B)</td>
-                      <td class="annexure-right">3,50,000</td>
-                  </tr>
-                  <tr>
-                      <td colspan="2">Taxes (TDS) and other Govt deductions are applicable as per law</td>
-                  </tr>
-                  <tr>
-                      <td colspan="2" class="annexure-notes">
-                          <div><span class="bold">Bonus & Statutory Bonus</span>, Performance bonus is applicable annually based on employee performance ratio.</div>
-                          <div>(*) Maximum amount based on 100% performance; VP shall be payable as per Variable Pay Program applicable for the Financial Year</div>
-                          <div><span class="bold">For Fresher</span> during the training period, employees shall receive half of their monthly salary only.</div>
-                          <div><span class="bold">Additional Benefits</span> : In addition to the above, you will also be eligible for the below-mentioned benefits -</div>
-                          <div>• <span class="bold">Gratuity</span> : As per Payment of Gratuity Act</div>
-                      </td>
-                  </tr>
-              </table>
           </div>
           <div class="annexure-signature">
-                <div class="left-sec">
-                    <div>With Best Wishes</div>
-                    <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Paul+Sir+sign.png" alt="Director Signature" srcset="">
-                    <div class="signature-block">
-                        <div class="director-name">Paul Tirupathi</div>
-                        <div class="director-role">Chief Executive Officer</div>
-                        <div class="label">SIGNAVOX TECHNOLOGIES PVT LTD</div>
-                    </div>
-                </div>
-                <div class="right-sec">
+                  <div class="left-sec">
+                      <div>With Best Wishes</div>
+                      <div class="label">SIGNAVOX TECHNOLOGIES PVT LTD</div>
+                  </div>
+                  <div class="right-sec">
                       <div class="label">Accepted</div>
                       <div class="sig-field">Name:</div>
                       <div class="sig-field">Signature:</div>
                       <div class="sig-field">Date:</div>
-                </div>
-            </div>
-          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+                  </div>
+              </div>
+          <div class="footer">5th floor,Signavox Technologies, AV Hub, 5th floor, C9RP+6RJ, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081.</div>
       </div>  
   </body>
   </html>
