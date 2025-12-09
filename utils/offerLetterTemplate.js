@@ -49,8 +49,8 @@ module.exports = (user) => {
               min-height: 297mm;
               background: #fff;
               /* ✅ Only watermark kept, background box removed */
-            //   background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
-              background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/snignavox_icon_no_bg.png');
+            //   background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/logos/snignavox_icon_no_bg.png');
+              background-image: url('https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/logos/snignavox_icon_no_bg.png');
               background-repeat: no-repeat;
               background-position: center center;
               background-size: 70% auto;
@@ -257,7 +257,7 @@ module.exports = (user) => {
       <div class="page">
           <div class="wm"></div>
           <div class="header">
-              <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Signavox_black_no_bg.png" alt="Company Logo" class="company-logo">
+              <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/logos/Signavox_black_no_bg.png" alt="Company Logo" class="company-logo">
               
           </div>
           <div class="offer-title">Offer Letter</div>
@@ -464,7 +464,7 @@ module.exports = (user) => {
           <div class="annexure-signature">
                 <div class="left-sec">
                     <div>With Best Wishes</div>
-                    <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/assets/Paul+Sir+sign.png" alt="Director Signature" srcset="">
+                    <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/logos/Paul+Sir+sign.png" alt="Director Signature" srcset="">
                     <div class="signature-block">
                         <div class="director-name">Paul Tirupathi</div>
                         <div class="director-role">Chief Executive Officer</div>
