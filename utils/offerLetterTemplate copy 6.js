@@ -33,14 +33,6 @@ module.exports = (user) => {
               size: A4;
               margin: 18mm 22mm;
           }
-
-          @font-face {
-  font-family: 'Times New Roman';
-  src: url('/fonts/TimesNewRoman.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
           
           body {
               font-family: 'Times New Roman', serif;
@@ -223,8 +215,8 @@ module.exports = (user) => {
           }
           .annexure-signature .label { font-weight: bold; }
           .annexure-signature .signature-block { font-weight: bold; }
-          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: -20px; left: 50px; }
-          .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 10px; left: -100px; }
+          .annexure-signature .left-sec { text-align: left; justify-self: start; width: 180mm; position: relative; top: 20px; left: 50px; }
+          .annexure-signature .right-sec { text-align: left; justify-self: end; width: 180mm;position: relative;top: 50px; left: -100px; }
           .sig-field { margin-top: 0mm; }
           
           @media print {
@@ -282,16 +274,16 @@ module.exports = (user) => {
               <div class="main-content">
                   <p><strong>Congratulations!</strong></p>
                   
-                  <p>It is our pleasure to welcome you to <strong>SIGNAVOX TECHNOLOGIES PRIVATE LIMITED.</strong> With reference to our discussions, we are pleased to offer you an appointment in our organization as per our terms and conditions mentioned below:</p>
+                  <p>After the discussion we had recently with you, we are pleased to offer you an Internship at <strong>SIGNAVOX TECHNOLOGIES PRIVATE LIMITED</strong> as per the terms and conditions mentioned below:</p>
                   
                   <ol class="numbered-list">
                       <li><strong>DATE OF JOINING</strong><br>
                           Your internship will commence from <strong>${joiningDate}</strong>.
                       </li>
                       
-                      <li><strong>DESIGNATION:</strong> Software Engineer Intern</li>
+                      <li><strong>DESIGNATION:</strong> Associate Software Engineer Intern</li>
                       
-                      <li><strong>WORK LOCATION</strong>
+                      <li><strong>PLACEMENT OF WORK</strong>
                           <ol type="i" class="sub-list">
                               <li>Your place of work will be <strong>Hyderabad</strong>.</li>
                               <li>You may be required to work in any Position, Department or Shift as may be assigned from time to time.</li>
@@ -299,8 +291,10 @@ module.exports = (user) => {
                           </ol>
                       </li>
                       
+                      <li><strong>WORKING HOURS</strong><br>
+                          Company follows 9-hour workday and 05 working days a week, with Saturday and Sunday as weekly off for General shift associates. The core working hours are from <strong>9:30 AM to 6:30 PM</strong>.
+                      </li>
                       
-    
                       <li><strong>SECRECY</strong>
                           <ol type="i" class="sub-list">
                               <li>If your employment is a full-time assignment, you shall devote your whole time and attention to the interest of the Company and shall not engage in any other business/occupation.</li>
@@ -311,7 +305,7 @@ module.exports = (user) => {
                       </li>
                       
                       <li><strong>EMPLOYEE BENEFITS</strong><br>
-                          As an intern at SIGNAVOX TECHNOLOGIES PRIVATE LIMITED, you will be entitled to a range of benefits designed to support your overall well-being and professional development throughout the internship period. These include basic <strong>health insurance</strong> coverage, access to essential company tools and internal resources, and participation in training programs aligned with your project work. Upon successful completion of the internship, you will be awarded a <strong>formal certificate</strong> and <strong> Letter of Recommendation </strong> acknowledging your contribution and tenure. Interns demonstrating exceptional performance may be considered for performance-based incentives or future employment opportunities, including <strong> Pre-Placement Offers (PPOs)</strong>, subject to business requirements. The company may also extend access to select team engagements, internal events, or learning platforms to encourage broader exposure and integration into the corporate environment.
+                          As an intern at SIGNAVOX TECHNOLOGIES PRIVATE LIMITED, you will be entitled to a range of benefits designed to support your overall well-being and professional development throughout the internship period. These include basic health insurance coverage, access to essential company tools and internal resources, and participation in training programs aligned with your project work. Upon successful completion of the internship, you will be awarded a formal certificate acknowledging your contribution and tenure. Interns demonstrating exceptional performance may be considered for performance-based incentives or future employment opportunities, including Pre-Placement Offers (PPOs), subject to business requirements. The company may also extend access to select team engagements, internal events, or learning platforms to encourage broader exposure and integration into the corporate environment.
                       </li>
                       
                   </ol>
@@ -323,9 +317,9 @@ module.exports = (user) => {
       <div class="page">
           <div class="wm"></div>
           <div class="content">
-          <ol class="numbered-list" start="6">
+          <ol class="numbered-list" start="7">
           <li><strong>KEY POLICIES, PROCEDURES AND PRACTICES</strong><br>
-                          During your employment with SIGNAVOX TECHNOLOGIES (and where applicable after your employment has concluded) you must comply with all of the Company's policies and procedures and any legal and/or statutory and/or regulatory obligations, including (but not limited to) SIGNAVOX TECHNOLOGIES policies and procedures on, and any other obligations relating to, anti-bribery and corruption. Failure to do so may result in disciplinary action being taken against you. You should familiarize yourself with all policies and procedures that apply to your grade and business area as set out on internet Signavoxtechnologies.com.
+                          During your employment with SIGNAVOX TECHNOLOGIES (and where applicable after your employment has concluded) you must comply with all of the Company's policies and procedures and any legal and/or statutory and/or regulatory obligations, including (but not limited to) SIGNAVOX TECHNOLOGIES policies and procedures on, and any other obligations relating to, anti-bribery and corruption. Failure to do so may result in disciplinary action being taken against you. You should familiarize yourself with all policies and procedures that apply to your grade and business area as set out on intranet Signavoxtechnologies.com.
                           
                       </li>
                   <li><strong>TERMINATION OF SERVICE</strong>
@@ -353,7 +347,7 @@ module.exports = (user) => {
       <div class="page">
           <div class="wm"></div>
           <div class="content">
-          <ol start="10">
+          <ol start="11">
           <li><strong>COMPENSATION STRUCTURE</strong><br>
                       The company may, at any time, review and/or restructure the compensation package based on Signavox Technologies Policy or any local legislation changes.
                   </li>
@@ -368,7 +362,7 @@ module.exports = (user) => {
               <ol type="i" class="sub-list">
                           <li><strong>COMPENSATION</strong><br>
                               SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable compensation for every associate. We always value excellence and high performance.<br><br>
-                              During your Internship period, you shall be eligible for a stipend of <strong>INR 5000 (Rupees Seven Thousand Only)</strong>.<br><br>
+                              During your Internship period, you shall be eligible for a stipend of <strong>INR 7000 (Rupees Seven Thousand Only)</strong>.<br><br>
         
                           </li>
                           <li><strong>LEAVE</strong><br>
@@ -389,7 +383,85 @@ module.exports = (user) => {
                       </ol>
                       </ol>
             </div>
-            <div class="annexure-signature">
+          <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
+      </div>
+      <div class="page">
+          <div class="content">
+          
+              <div class="annexure-title">Annexure A</div>
+              <p class="annexure-intro">This Annexure applies only to interns who are eligible for permanent employment with the Company and sets out the related compensation and terms.</p>
+              <table class="annexure-table">
+                  <tr>
+                      <th style="width:60%">Name: <span class="bold">${user.name ? user.title + '. ' + user.name.toUpperCase() : 'Mr.TEST INTERN FORMAT'}</span></th>
+                      <th class="annexure-right">&nbsp;</th>
+                  </tr>
+                  <tr>
+                      <th>Title: <span class="bold">Software Engineer</span></th>
+                      <th class="annexure-right">&nbsp;</th>
+                  </tr>
+                  <tr>
+                      <th>Components of Total Cost to Company</th>
+                      <th class="annexure-right">Rs. (Per Annum)</th>
+                  </tr>
+                  <tr>
+                      <td>Basic</td>
+                      <td class="annexure-right">1,30,000.00</td>
+                  </tr>
+                  <tr>
+                      <td>HRA</td>
+                      <td class="annexure-right">52,000.00</td>
+                  </tr>
+                  <tr>
+                      <td>Conveyance</td>
+                      <td class="annexure-right">20,800.00</td>
+                  </tr>
+                  <tr>
+                      <td>Medical Allowance</td>
+                      <td class="annexure-right">18,200.00</td>
+                  </tr>
+                  <tr>
+                      <td>Leave Travel Allow</td>
+                      <td class="annexure-right">23,400.00</td>
+                  </tr>
+                  <tr>
+                      <td>Employee PF</td>
+                      <td class="annexure-right">15,600.00</td>
+                  </tr>
+                  <tr class="annexure-highlight">
+                      <td>Gross Salary (A)</td>
+                      <td class="annexure-right">2,60,000</td>
+                  </tr>
+                  <tr>
+                      <td>Additional Benefits (B)</td>
+                      <td class="annexure-right">&nbsp;</td>
+                  </tr>
+                  <tr>
+                      <td>Variable Pay</td>
+                      <td class="annexure-right">50,000.00</td>
+                  </tr>
+                  <tr>
+                      <td>PERFORMANCE BONUS</td>
+                      <td class="annexure-right">40,000.00</td>
+                  </tr>
+                  <tr class="annexure-highlight">
+                      <td>Cost to Company (CTC) (A + B)</td>
+                      <td class="annexure-right">3,50,000</td>
+                  </tr>
+                  <tr>
+                      <td colspan="2">Taxes (TDS) and other Govt deductions are applicable as per law</td>
+                  </tr>
+                  <tr>
+                      <td colspan="2" class="annexure-notes">
+                          <div><span class="bold">Bonus & Statutory Bonus</span>, Performance bonus is applicable annually based on employee performance ratio.</div>
+                          <div>(*) Maximum amount based on 100% performance; VP shall be payable as per Variable Pay Program applicable for the Financial Year</div>
+                          <div><span class="bold">For Fresher</span> during the training period, employees shall receive half of their monthly salary only.</div>
+                          <div><span class="bold">Additional Benefits</span> : In addition to the above, you will also be eligible for the below-mentioned benefits -</div>
+                          <div>• <span class="bold">Gratuity</span> : As per Payment of Gratuity Act</div>
+                      </td>
+                  </tr>
+              </table>
+          </div>
+          <div class="annexure-signature">
                 <div class="left-sec">
                     <div>With Best Wishes</div>
                     <img src="https://signavox-career-ladder.s3.eu-north-1.amazonaws.com/logos/Paul+Sir+sign.png" alt="Director Signature" srcset="">
@@ -407,9 +479,6 @@ module.exports = (user) => {
                 </div>
             </div>
           <div class="footer">Signavox Technologies, AV Hub, 5th floor, Vittal Rao Nagar, HITEC City, Hyderabad, Telangana, 500081</div>
-      </div>
-          
-          
       </div>  
   </body>
   </html>
