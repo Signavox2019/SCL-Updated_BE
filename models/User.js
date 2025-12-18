@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
   },
   hrName: { type: String, default: 'HR Manager' },
   employeeAddress: { type: String },
-  stipend: { type: String, default: '₹ 7,000' },
+  stipend: { type: String, default: '₹ 5,000' },
 
   // Course & Batch Details
   courseRegisteredFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, // Link to Course model

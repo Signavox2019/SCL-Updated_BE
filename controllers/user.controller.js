@@ -519,27 +519,143 @@ exports.getOwnProfile = async (req, res) => {
 
 
 
-exports.generateOfferLetter = async (req, res) => {
+// exports.generateOfferLetter = async (req, res) => {
+//   try {
+//     const userId = req.params.userId;
+
+//     const user = await User.findById(userId);
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     // console.log('Generating offer letter for user:', user);
+
+//     const offerLetterUrl = await generateAndUploadOfferLetter(user);
+
+//     // Save URL in user schema
+//     await User.findByIdAndUpdate(user._id, {
+//       offerLetter: offerLetterUrl,
+//     });
+
+//     res.status(200).json({
+//       message: 'Offer letter generated and uploaded successfully.',
+//       url: offerLetterUrl,
+//     });
+//   } catch (error) {
+//     console.error('Offer Letter Error:', error);
+//     res.status(500).json({ message: 'Failed to generate offer letter.' });
+//   }
+// };
+
+
+// Generate Offer Letter by Admin only
+exports.generateOfferLetterByAdmin = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const { userId } = req.params;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    // console.log('Generating offer letter for user:', user);
+    const user = await User.findById(userId)
+      .populate('courseRegisteredFor')
+      .populate('batchAssigned');
 
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 1️⃣ Check approval
+    if (user.approveStatus !== 'approved') {
+      return res.status(400).json({
+        message: 'User must be approved before generating offer letter'
+      });
+    }
+
+    // 2️⃣ Check mandatory profile fields
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'email',
+      'phone',
+      'degree',
+      'collegeName'
+    ];
+
+    const missingFields = requiredFields.filter(
+      field => !user[field]
+    );
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: 'User profile is incomplete',
+        missingFields
+      });
+    }
+
+    // 3️⃣ Course & Batch check
+    if (!user.courseRegisteredFor) {
+      return res.status(400).json({
+        message: 'Course is not assigned to the user'
+      });
+    }
+
+    if (!user.batchAssigned) {
+      return res.status(400).json({
+        message: 'Batch is not assigned to the user'
+      });
+    }
+
+    // 4️⃣ Prevent duplicate generation
+    if (user.offerLetter) {
+      return res.status(400).json({
+        message: 'Offer letter already generated',
+        offerLetter: user.offerLetter
+      });
+    }
+
+    // 5️⃣ Generate + Upload Offer Letter
     const offerLetterUrl = await generateAndUploadOfferLetter(user);
 
-    // Save URL in user schema
-    await User.findByIdAndUpdate(user._id, {
-      offerLetter: offerLetterUrl,
+    user.offerLetter = offerLetterUrl;
+    user.offerLetterGeneratedAt = new Date();
+    await user.save();
+
+    res.status(201).json({
+      message: 'Offer letter generated successfully',
+      offerLetterUrl
     });
 
-    res.status(200).json({
-      message: 'Offer letter generated and uploaded successfully.',
-      url: offerLetterUrl,
-    });
   } catch (error) {
-    console.error('Offer Letter Error:', error);
-    res.status(500).json({ message: 'Failed to generate offer letter.' });
+    console.error('Generate Offer Letter Error:', error);
+    res.status(500).json({
+      message: 'Failed to generate offer letter',
+      error: error.message
+    });
+  }
+};
+
+
+// User side
+exports.getMyOfferLetter = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId).select('name email offerLetter');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.offerLetter) {
+      return res.status(404).json({
+        message: 'Offer letter has not been generated yet'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Offer letter fetched successfully',
+      offerLetterUrl: user.offerLetter
+    });
+
+  } catch (error) {
+    console.error('Get Offer Letter Error:', error);
+    res.status(500).json({
+      message: 'Failed to fetch offer letter',
+      error: error.message
+    });
   }
 };

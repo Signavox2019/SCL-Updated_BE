@@ -16,7 +16,7 @@ router.get('/:userId/installments', protect, allowRoles('admin', 'support'), use
 router.get('/me', protect, userController.getOwnProfile);
 
 // Own offer letter
-router.get('/:userId/offer-letter', protect, userController.generateOfferLetter);
+// router.get('/:userId/offer-letter', protect, userController.generateOfferLetter);
 
 // ✅ Waiting users – only for admin
 router.get('/waiting', protect, allowRoles('admin'), userController.getWaitingUsers);
@@ -41,5 +41,18 @@ router.delete('/:id', protect, allowRoles('admin', 'support'), userController.de
 
 // ✅ User metrics – admin and support
 router.get('/stats/metrics', protect, allowRoles('admin', 'support'), userController.userStats);
+
+router.post(
+  '/:userId/offer-letter',
+  protect,
+  allowRoles('admin'),
+  userController.generateOfferLetterByAdmin
+);
+
+router.get(
+  '/me/offer-letter',
+  protect,
+  userController.getMyOfferLetter
+);
 
 module.exports = router;

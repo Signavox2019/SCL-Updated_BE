@@ -4,16 +4,66 @@ const Event = require('../models/Event');
 const Course = require('../models/Course');
 const Batch = require('../models/Batch');
 
+// exports.getDashboardData = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+
+//     // ✅ Enrolled progress with course details
+//     const progress = await Progress.find({ user: userId }).populate('course');
+
+//     // ✅ Completed course list from progress
+//     const completedCourses = progress
+//       .filter(p => p.isCompleted)
+//       .map(p => p.course);
+
+//     // ✅ Certificates
+//     const certificates = await Certificate.find({ user: userId }).populate('course');
+
+//     // ✅ Registered events
+//     const events = await Event.find({ registeredUsers: userId });
+
+//     // ✅ Batches where the user is enrolled
+//     const batches = await Batch.find({ users: userId })
+//       .populate('course')
+//       .populate('professor', 'name email linkedIn profileImage designation');
+
+//     res.status(200).json({
+//       message: 'Dashboard data fetched',
+//       enrolledCourses: progress,
+//       completedCourses,
+//       certificates,
+//       registeredEvents: events,
+//       enrolledBatches: batches
+//     });
+//   } catch (error) {
+//     console.error('Error fetching dashboard data:', error);
+//     res.status(500).json({
+//       message: 'Failed to fetch dashboard data',
+//       error: error.message || error
+//     });
+//   }
+// };
+
+
+
 exports.getDashboardData = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // ✅ Enrolled progress with course details
+    // ✅ Fetch batches where user is enrolled
+    const batches = await Batch.find({ users: userId })
+      .populate('course')
+      .populate('professor', 'name email linkedIn profileImage designation');
+
+    // ✅ Enrolled courses from batches
+    const enrolledCourses = batches.map(batch => batch.course);
+
+    // ✅ Progress (optional)
     const progress = await Progress.find({ user: userId }).populate('course');
 
-    // ✅ Completed course list from progress
+    // ✅ Completed courses
     const completedCourses = progress
-      .filter(p => p.isCompleted)
+      .filter(p => p.isCompleted || p.progressPercentage === 100)
       .map(p => p.course);
 
     // ✅ Certificates
@@ -22,28 +72,24 @@ exports.getDashboardData = async (req, res) => {
     // ✅ Registered events
     const events = await Event.find({ registeredUsers: userId });
 
-    // ✅ Batches where the user is enrolled
-    const batches = await Batch.find({ users: userId })
-      .populate('course')
-      .populate('professor', 'name email linkedIn profileImage designation');
-
     res.status(200).json({
-      message: 'Dashboard data fetched',
-      enrolledCourses: progress,
+      message: 'Dashboard data fetched successfully',
+      enrolledCourses,
+      progress,
       completedCourses,
       certificates,
       registeredEvents: events,
       enrolledBatches: batches
     });
+
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    console.error('Dashboard error:', error);
     res.status(500).json({
       message: 'Failed to fetch dashboard data',
-      error: error.message || error
+      error: error.message
     });
   }
 };
-
 
 
 exports.getProgressStats = async (req, res) => {

@@ -33,14 +33,6 @@ module.exports = (user) => {
               size: A4;
               margin: 18mm 22mm;
           }
-
-          @font-face {
-  font-family: 'Times New Roman';
-  src: url('/fonts/TimesNewRoman.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
           
           body {
               font-family: 'Times New Roman', serif;
@@ -368,7 +360,7 @@ module.exports = (user) => {
               <ol type="i" class="sub-list">
                           <li><strong>COMPENSATION</strong><br>
                               SIGNAVOX TECHNOLOGIES is an equal opportunity employer. We believe in Fair and equitable compensation for every associate. We always value excellence and high performance.<br><br>
-                              During your Internship period, you shall be eligible for a stipend of <strong>INR 5000 (Rupees Seven Thousand Only)</strong>.<br><br>
+                              During your Internship period, you shall be eligible for a stipend of <strong>INR 5000 (Rupees Five Thousand Only)</strong>.<br><br>
         
                           </li>
                           <li><strong>LEAVE</strong><br>
